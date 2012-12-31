@@ -7,8 +7,8 @@ var Basic = {
   yAxisWidth: 50,
   xAxisHeight: 30,
   chartPd: 10,
-  kLineWidth: 8,
-  kLineMarginRight: 3,
+  kLineWidth: 2,
+  kLineMarginRight: 2,
   signWidth: 20,
   canvasPaddingLeft: 10,
   signR: 15,
@@ -399,10 +399,10 @@ function QTChart (divElement) {
 
     if (dataStep > 0) {
       // 画布向右拖动，数据往左移动
-      pre != 0 && (pre-- , cur--)
+      pre != 0 && (pre--, cur--)
     } else if (dataStep < 0) {
       // 画布向左拖动，数据往右移动
-      cur != Basic.OrignDatas.kline.length - 1 && (cur++ , pre++)
+      cur != Basic.OrignDatas.kline.length - 1 && (cur++, pre++)
     }
     this.DataPreIndex = pre
     this.DataCurIndex = cur
@@ -751,7 +751,7 @@ function QTChart (divElement) {
       Basic.kLineWidth -= 2
       Basic.kLineMarginRight -= 1
       Basic.kLineWidth < 6 && (Basic.kLineWidth = 2)
-      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 1)
+      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 2)
     }
     this.CalSceenKNum()
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
@@ -923,7 +923,7 @@ function KLinesChart (canvas, option) {
   this.DrawBi = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'bottom') {
-      t = (new Date(obj.begin_time).getTime() - new Date(obj.end_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -933,7 +933,7 @@ function KLinesChart (canvas, option) {
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
       lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.begin_time).getTime() - new Date(obj.end_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -989,9 +989,9 @@ function KLinesChart (canvas, option) {
       return
     }
     startX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
-    startY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Max - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    startY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     endX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
-    endY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Min - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    endY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     this.Canvas.beginPath()
     this.Canvas.strokeStyle = '#0093ff'
     this.Canvas.lineWidth = 2
