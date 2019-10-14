@@ -10,15 +10,17 @@
   <!-- 加载资源 -->
   <link rel="stylesheet" href="css/tools.css" />
   <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_1456981_ohmhyy9wd9l.css" />
 </head>
 
 <body>
-  <div id="kline" style="width: 900px;height:400px;position: relative;"></div>
-
+  <script type="text/javascript" src="https://at.alicdn.com/t/font_1456981_ohmhyy9wd9l.js"></script>
   <script src="js/jquery.min.js"></script>
   <script src="js/quantchart.js"></script>
   <script src="datas/datas.js"></script>
   <script src="utils/indicatorFormula.js"></script>
+
+  <div id="kline" style="width: 900px;height:400px;position: relative;"></div>
   <!-- <script src="datas/signsDatas.js"></script> -->
   <script>
     function KLineChart(divKLine) {
@@ -34,19 +36,16 @@
             goodsName: 'BTC/USDT',
             index: 0,
             datas: kLines,
-            cHeightRatio: 0.6,
           },
           {
             name: 'vol',
             index: 1,
             datas: kLines,
-            cHeightRatio: 0.2
           },
           {
             name: 'macd',
             index: 2,
             datas: macdDatas,
-            cHeightRatio: 0.2,
             style: {
               DIFF: '#fa5252',
               DEA: '#5f5fff',
