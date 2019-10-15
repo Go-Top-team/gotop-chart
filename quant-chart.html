@@ -10,7 +10,7 @@
   <!-- 加载资源 -->
   <link rel="stylesheet" href="css/tools.css" />
   <link rel="stylesheet" href="css/main.css" />
-  <link rel="stylesheet" href="https://at.alicdn.com/t/font_1456981_ohmhyy9wd9l.css" />
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_1456981_b3y2pzilcnk.css" />
 </head>
 
 <body>
@@ -21,7 +21,7 @@
   <script src="utils/indicatorFormula.js"></script>
 
   <div id="kline" style="width: 900px;height:400px;position: relative;"></div>
-  <!-- <script src="datas/signsDatas.js"></script> -->
+  <script src="datas/topLowDatas.js"></script>
   <script>
     function KLineChart(divKLine) {
       var KDJ = hxc3.IndicatorFormula.getClass('macd');
@@ -36,6 +36,7 @@
             goodsName: 'BTC/USDT',
             index: 0,
             datas: kLines,
+            topLowDatas: topLowDatas
           },
           {
             name: 'vol',

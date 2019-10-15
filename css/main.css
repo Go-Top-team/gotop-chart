@@ -5,16 +5,41 @@ body{
 .top-tool-container{
   width: 100%;
   background: #fff;
-  border: 1px solid #cdcdcd;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e0e3eb;
   box-sizing: border-box;
 }
 .go-date-input{
   width: 150px;
-  height: 36px;
-  line-height: 36px;
+  height: 40px;
+  /* line-height: 36px; */
   border-radius: 1px;
   border: 1px solid #cdcdcd;
   padding-left: 10px;
+}
+.go-date-btn{
+  width: 60px;
+  height: 43px;
+  background: #2196f3;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+}
+.go-date-btn:hover{
+  background: #1988e0;
+}
+.indicators{
+  width: 100px;
+  text-align: center;
+  height: 44px;
+  line-height: 44px;
+  border-right: 1px solid #e0e3eb;
+  border-left: 2px solid #e0e3eb;
+  font-size: 16px;
+}
+.indicators:hover{
+  background: #ecf0fb;
 }
 .jschart-drawing{
   position: absolute;
