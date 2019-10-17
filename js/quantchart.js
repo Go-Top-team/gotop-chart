@@ -13,8 +13,8 @@ var Basic = {
   signR: 15,
   upColor: '#26a69a',
   downColor: '#ef5350',
-  buySignBg: '#4fc3f7',
-  sellSignBg: '#fdd835',
+  buySignBg: '#4fc3f78c',
+  sellSignBg: '#fdd8359e',
   volUpColor: 'rgba(38,166,154,0.5)',
   volDownColor: 'rgba(239,83,80,0.5)',
 }
