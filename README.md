@@ -1,3 +1,6 @@
 # go-quant-chart
-web端K线图表
-![image](https://github.com/ManbasJi/go-quant-chart/blob/master/images/demo2.png)
+## web端K线图表Demo
+[打开图表](./quant-chart.html)
+
+## 效果图:
+![image](./images/demo2.png)
