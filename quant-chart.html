@@ -19,9 +19,11 @@
   <script src="js/quantchart.js"></script>
   <script src="datas/datas.js"></script>
   <script src="utils/indicatorFormula.js"></script>
+  <script src="indicators/baseFunc.js"></script>
+  <script src="indicators/topLow.js"></script>
+  <script src="datas/topLowDatas.js"></script>
 
   <div id="kline" style="width: 900px;height:400px;position: relative;"></div>
-  <script src="datas/topLowDatas.js"></script>
   <script>
     function KLineChart(divKLine) {
       var KDJ = hxc3.IndicatorFormula.getClass('macd');
@@ -36,7 +38,7 @@
             goodsName: 'BTC/USDT',
             index: 0,
             datas: kLines,
-            topLowDatas: topLowDatas
+            topLowDatas: topLowDatas,
           },
           {
             name: 'vol',

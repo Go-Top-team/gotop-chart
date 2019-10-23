@@ -111,6 +111,18 @@ function QTChart (divElement) {
     this.OptCanvasElement.style.height = this.OptCanvasElement.height + 'px';
 
     var pixelTatio = GetDevicePixelRatio(); //获取设备的分辨率，物理像素与css像素的比值
+    Basic.pixelTatio = pixelTatio
+
+    Basic.curMsgContainerHeight = pixelTatio * 50
+    Basic.yAxisWidth = pixelTatio * 50
+    Basic.xAxisHeight = pixelTatio * 30
+    Basic.chartPd = pixelTatio * 10
+    Basic.kLineWidth = pixelTatio * 8
+    Basic.kLineMarginRight = pixelTatio * 3
+    Basic.signWidth = pixelTatio * 20
+    Basic.canvasPaddingLeft = pixelTatio * 10
+    Basic.signR = pixelTatio * 15
+
     this.CanvasElement.height *= pixelTatio;
     this.CanvasElement.width *= pixelTatio;
     this.OptCanvasElement.height *= pixelTatio;
@@ -226,6 +238,16 @@ function QTChart (divElement) {
         this.ChartArray[i].datas = Basic.OrignDatas[this.ChartArray[i].name].slice(pre, cur + 1)
       }
     }
+    var inpre = pre - Basic.ScreenKNum >= 0 ? pre - Basic.ScreenKNum : 0
+    this.SplitIndicatorsDatas(inpre, cur + Basic.ScreenKNum)
+  }
+  // 指标数据截取
+  this.SplitIndicatorsDatas = function (pre, cur) {
+    if (!cur || cur >= Basic.OrignDatas.kline.length - 1) {
+      this.IndicatorDatas = Basic.OrignDatas['kline'].slice(pre)
+    } else if (pre >= 0) {
+      this.IndicatorDatas = Basic.OrignDatas['kline'].slice(pre, cur + 1)
+    }
   }
   // 计算当前屏幕可容纳多少根k线
   this.CalSceenKNum = function () {
@@ -240,6 +262,7 @@ function QTChart (divElement) {
       switch (this.ChartArray[i].name) {
         case 'kline':
           this.xAxisChart.SetUpdateXAxis(this.ChartArray[i])
+          // this.ChartArray[i].topLowDatas = this.TopLow.Calculate(this.IndicatorDatas)
           this.ChartArray[i].yRange = this.kLineChart.SetUpdateKLineChart(this.ChartArray[i])
           break;
         case 'vol':
@@ -296,7 +319,7 @@ function QTChart (divElement) {
       frameTool.id = Guid()
       this.FrameToolIds.push(frameTool.id)
       frameTool.style.position = 'absolute'
-      frameTool.style.top = parseInt(this.TopToolDiv.style.height.replace("px", "")) + this.ChartArray[i].cStartY + 1 + 'px'
+      frameTool.style.top = parseInt(this.TopToolDiv.style.height.replace("px", "")) + (this.ChartArray[i].cStartY / Basic.pixelTatio) + 1 + 'px'
       frameTool.style.left = 10 + 'px'
       frameTool.style.zIndex = 3
       frameTool.style.fontSize = 20 + 'px'
@@ -320,12 +343,15 @@ function QTChart (divElement) {
     for (var i in this.ChartArray) {
       switch (this.ChartArray[i].name) {
         case 'kline':
+          // this.TopLow = TopLow.Init()
+          // this.ChartArray[i].topLowDatas = this.TopLow.Create(this.IndicatorDatas)
           var xAxisChart = new XAxis(this.Canvas, this.ChartArray[i])
           var kLineChart = new KLinesChart(this.Canvas, this.ChartArray[i])
           this.xAxisChart = xAxisChart
           this.kLineChart = kLineChart
           this.ChartObjArray.push(this.kLineChart)
           this.xAxisChart.Create()
+          console.log('topLow:', this.ChartArray[i].topLowDatas)
           this.ChartArray[i].yRange = this.kLineChart.Create()
           break;
         case 'vol':
@@ -346,6 +372,8 @@ function QTChart (divElement) {
   // 绘制十字 光标
   this.onDrawCursor = function (x, y) {
     // 当前光标所处的K线位置
+    x *= Basic.pixelTatio
+    y *= Basic.pixelTatio
     let kn = Math.ceil(
       (x - Basic.canvasPaddingLeft) /
       (Basic.kLineWidth + Basic.kLineMarginRight)
@@ -502,11 +530,14 @@ function KLinesChart (canvas, option) {
   this.drawTopLowPoint = {
 
   }
+  this.toplow = null
   // 创建K线图表
   this.Create = function () {
     this.YAxisChart = new YAxis(this.Canvas, this.Option)
     this.YAxisChart.Create('low', 'high')
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    console.log('toplow:', Object.keys(this.TopLowDatas).length)
+    console.log()
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
@@ -515,20 +546,28 @@ function KLinesChart (canvas, option) {
           this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
           this.maxTop.value = this.Datas[i].high
           this.maxTop.index = i
+          this.drawTopLowPoint.top = this.maxTop
           this.turnStatus = 'ding'
         } else if (this.turnStatus == 'ding') {
           this.setMaxValue(i, this.Datas[i].high)
           i == j - 1 && this.DrawTopLowLine()
+        }
+        if (this.Datas[i].day == Object.keys(this.TopLowDatas).splice(-1)) {
+          this.DrawTopLowLine()
         }
       } else if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'di') {
         if (this.turnStatus == 'ding' || this.turnStatus == '') {
           this.turnStatus == 'ding' && this.DrawTopLowLine() // +绘制
           this.maxLow.value = this.Datas[i].low
           this.maxLow.index = i
+          this.drawTopLowPoint.low = this.maxLow
           this.turnStatus = 'di'
         } else if (this.turnStatus == 'di') {
           this.setMaxValue(i, this.Datas[i].low)
           i == j - 1 && this.DrawTopLowLine()
+        }
+        if (this.Datas[i].day == Object.keys(this.TopLowDatas).splice(-1)) {
+          this.DrawTopLowLine()
         }
       }
     }
@@ -628,13 +667,13 @@ function KLinesChart (canvas, option) {
   }
 
   this.DrawTopLowLine = function () {
-    if (!this.drawTopLowPoint['low'] || !this.drawTopLowPoint['top']) {
+    if (!this.drawTopLowPoint['top'] || !this.drawTopLowPoint['low']) {
       return
     }
-    tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.drawTopLowPoint.top.index + this.Option.cStartX + Basic.kLineWidth / 2
-    tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.drawTopLowPoint.top.value - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
-    lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.drawTopLowPoint.low.index + this.Option.cStartX + Basic.kLineWidth / 2
-    lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.drawTopLowPoint.low.value - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.drawTopLowPoint['top'].index + this.Option.cStartX + Basic.kLineWidth / 2
+    tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.drawTopLowPoint['top'].value - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.drawTopLowPoint['low'].index + this.Option.cStartX + Basic.kLineWidth / 2
+    lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.drawTopLowPoint['low'].value - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     this.Canvas.beginPath()
     this.Canvas.strokeStyle = '#f72b27'
     this.Canvas.lineWidth = 2
@@ -663,6 +702,7 @@ function KLinesChart (canvas, option) {
   this.SetUpdateKLineChart = function (option) {
     this.Option = option
     this.Datas = option.datas
+    this.TopLowDatas = option.topLowDatas
     // this.Canvas.clearRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, option.cEndY - option.cStartY)
     this.YAxisChart.SetUpdateYAxis(this.Option)
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
@@ -676,6 +716,7 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+
       if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'ding') {
         if (this.turnStatus == 'di' || this.turnStatus == '') {
           this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
