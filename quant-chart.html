@@ -29,6 +29,11 @@
       var KDJ = hxc3.IndicatorFormula.getClass('macd');
       var kdjIndicator = new KDJ();
       var macdDatas = kdjIndicator.calculate(kLines);
+
+      var RSI = hxc3.IndicatorFormula.getClass('rsi');
+      var kdjIndicator = new RSI();
+      var rsiDatas = kdjIndicator.calculate(kLines);
+      console.log('rsi:', rsiDatas)
       this.DivKLine = divKLine;
       this.Chart = QTChart.Init(divKLine);   //把K线图绑定到一个Div上
       this.Option = {
@@ -53,6 +58,16 @@
               DIFF: '#fa5252',
               DEA: '#5f5fff',
               MACD: '#fa5252'
+            }
+          },
+          {
+            name: 'rsi',
+            index: 3,
+            datas: rsiDatas,
+            style: {
+              RSI6: '#f71c17',
+              RSI12: '#0680e0',
+              RSI24: '#04477b'
             }
           }
         ]

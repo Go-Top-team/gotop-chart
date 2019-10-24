@@ -238,8 +238,8 @@ function QTChart (divElement) {
         this.ChartArray[i].datas = Basic.OrignDatas[this.ChartArray[i].name].slice(pre, cur + 1)
       }
     }
-    var inpre = pre - Basic.ScreenKNum >= 0 ? pre - Basic.ScreenKNum : 0
-    this.SplitIndicatorsDatas(inpre, cur + Basic.ScreenKNum)
+    // var inpre = pre - Basic.ScreenKNum >= 0 ? pre - Basic.ScreenKNum : 0
+    // this.SplitIndicatorsDatas(inpre, cur + Basic.ScreenKNum)
   }
   // 指标数据截取
   this.SplitIndicatorsDatas = function (pre, cur) {
@@ -270,6 +270,10 @@ function QTChart (divElement) {
           break;
         case 'macd':
           this.ChartArray[i].yRange = this.macdChart.SetUpdateMACDChart(this.ChartArray[i])
+          break;
+        case 'rsi':
+          this.ChartArray[i].yRange = this.rsiChart.SetUpdateRSIChart(this.ChartArray[i])
+          break;
       }
     }
   }
@@ -365,6 +369,13 @@ function QTChart (divElement) {
           this.macdChart = macdChart
           this.ChartObjArray.push(this.macdChart)
           this.ChartArray[i].yRange = this.macdChart.Create()
+          break;
+        case 'rsi':
+          var rsiChart = new RSIChart(this.Canvas, this.ChartArray[i])
+          console.log('rsi option:', this.ChartArray[i])
+          this.rsiChart = rsiChart
+          this.ChartObjArray.push(this.rsiChart)
+          this.ChartArray[i].yRange = this.rsiChart.Create()
           break;
       }
     }
@@ -463,6 +474,8 @@ function QTChart (divElement) {
         case 'macd':
           this.macdChart.DrawCurMsg(this.OptCanvas, this.ChartArray[c])
           break;
+        case 'rsi':
+          this.rsiChart.DrawCurMsg(this.OptCanvas, this.ChartArray[c])
       }
     }
   }
@@ -502,7 +515,6 @@ function TopToolContainer () {
     return this.TopTool
   }
 }
-
 
 /**
  * @desc K线组件
@@ -641,11 +653,11 @@ function KLinesChart (canvas, option) {
     let signType
     if (curMsg.signal.type === 'buy') {
       signType = '买'
-      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.low - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
       this.Canvas.fillStyle = Basic.buySignBg
     } else {
       signType = '卖'
-      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.high - this.YAxisChart.MinDatas) * this.YNumpx - r + this.Option.cStartY + Basic.curMsgContainerHeight
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
       this.Canvas.fillStyle = Basic.sellSignBg
     }
     this.Canvas.arc(centerX, centerY, r, 0, 2 * Math.PI)
@@ -929,6 +941,7 @@ function MACDChart (canvas, option) {
   }
 
   this.DrawCurve = function (i, attrName) {
+
     this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
     if (parseFloat(this.Datas[i][attrName]) >= 0) {
       this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
@@ -952,6 +965,107 @@ function MACDChart (canvas, option) {
     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
   }
 
+}
+
+function RSIChart (canvas, option) {
+  this.Canvas = canvas
+  this.Option = option
+  this.Datas = option.datas
+  this.StartX = 0
+  this.StartY = 0
+  this.EndX = 0
+  this.EndY = 0
+  this.Create = function () {
+    this.YAxisChart = new YAxis(this.Canvas, this.Option)
+    this.YAxisChart.Create('A', 'D', 'RSI6', 'RSI12', 'RSI24')
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawRSI()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.SetUpdateRSIChart = function (option) {
+    this.Option = option
+    this.Datas = option.datas
+    this.YAxisChart.SetUpdateYAxis(this.Option)
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawRSI()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.DrawRSI = function () {
+    this.Canvas.beginPath()
+    this.Canvas.fillStyle = 'rgba(51,51,51,0.2)'
+    this.Canvas.fillRect(0, this.Option.cEndY - Basic.chartPd - (80 - this.YAxisChart.MinDatas) * this.YNumpx, Basic.width - Basic.yAxisWidth, 60 * this.YNumpx)
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.fillStyle = 'rgba(51,51,51,0.4)'
+    this.Canvas.fillRect(0, this.Option.cEndY - Basic.chartPd - (60 - this.YAxisChart.MinDatas) * this.YNumpx, Basic.width - Basic.yAxisWidth, 20 * this.YNumpx)
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['RSI6']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'RSI6')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['RSI12']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'RSI12')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['RSI24']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'RSI24')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+  }
+
+  this.DrawCurve = function (i, attrName) {
+    this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
+    this.StartY = this.Option.cEndY - (this.Datas[i][attrName] - this.YAxisChart.MinDatas) * this.YNumpx - Basic.chartPd
+    if (i === 0) {
+      this.Canvas.moveTo(this.StartX, this.StartY)
+    }
+    this.Canvas.lineTo(this.StartX, this.StartY)
+  }
+
+  // 绘制当前信息
+  this.DrawCurMsg = function (canvas, option) {
+    let curMsg = option.curMsg
+    let text = 'RSI(6,12,24)  ' + 'RSI6= ' + curMsg['RSI6'].toFixed(2) + ',RSI12= ' + curMsg['RSI12'].toFixed(2) + ',RSI24= ' + curMsg['RSI24'].toFixed(2)
+    canvas.setLineDash([0])
+    canvas.strokeStyle = '#cdcdcd'
+    canvas.fillStyle = '#f2faff'
+    canvas.strokeRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.fillRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.beginPath()
+    canvas.font = "18px Verdana"
+    canvas.fillStyle = "#333"
+    canvas.fillText(text, option.cStartX + 40, option.cStartY + 20)
+    canvas.closePath()
+    // canvas.stroke()
+  }
 }
 // Y轴画法
 function YAxis (canvas, option) {
@@ -1158,9 +1272,6 @@ function XAxis (canvas, option) {
     this.Draw()
   }
 }
-
-
-
 
 QTChart.Init = function (divElement) {
   var qtchart = new QTChart(divElement)
