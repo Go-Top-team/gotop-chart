@@ -274,6 +274,12 @@ function QTChart (divElement) {
         case 'rsi':
           this.ChartArray[i].yRange = this.rsiChart.SetUpdateRSIChart(this.ChartArray[i])
           break;
+        case 'asi':
+          this.ChartArray[i].yRange = this.asiChart.SetUpdateASIChart(this.ChartArray[i])
+          break;
+        case 'kdj':
+          this.ChartArray[i].yRange = this.kdjChart.SetUpdateASIChart(this.ChartArray[i])
+          break;
       }
     }
   }
@@ -331,6 +337,7 @@ function QTChart (divElement) {
       this.DivElement.appendChild(frameTool)
       $("#" + frameTool.id).click(function () {
         var option = _self.ChartArray[this.dataset.id]
+        console.log('remove:', this.dataset.id)
         _self.RemoveChart(option)
       })
     }
@@ -376,6 +383,18 @@ function QTChart (divElement) {
           this.rsiChart = rsiChart
           this.ChartObjArray.push(this.rsiChart)
           this.ChartArray[i].yRange = this.rsiChart.Create()
+          break;
+        case 'asi':
+          var asiChart = new ASIChart(this.Canvas, this.ChartArray[i])
+          this.asiChart = asiChart
+          this.ChartObjArray.push(this.asiChart)
+          this.ChartArray[i].yRange = this.asiChart.Create()
+          break;
+        case 'kdj':
+          var kdjChart = new KDJChart(this.Canvas, this.ChartArray[i])
+          this.kdjChart = kdjChart
+          this.ChartObjArray.push(this.kdjChart)
+          this.ChartArray[i].yRange = this.kdjChart.Create()
           break;
       }
     }
@@ -476,6 +495,13 @@ function QTChart (divElement) {
           break;
         case 'rsi':
           this.rsiChart.DrawCurMsg(this.OptCanvas, this.ChartArray[c])
+          break;
+        case 'asi':
+          this.asiChart.DrawCurMsg(this.OptCanvas, this.ChartArray[c])
+          break;
+        case 'kdj':
+          this.kdjChart.DrawCurMsg(this.OptCanvas, this.ChartArray[c])
+          break;
       }
     }
   }
@@ -965,6 +991,173 @@ function MACDChart (canvas, option) {
     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
   }
 
+}
+
+function ASIChart (canvas, option) {
+  this.Canvas = canvas
+  this.Option = option
+  this.Datas = option.datas
+  this.StartX = 0
+  this.StartY = 0
+  this.EndX = 0
+  this.EndY = 0
+  this.Create = function () {
+    this.YAxisChart = new YAxis(this.Canvas, this.Option)
+    this.YAxisChart.Create('ASI', 'ASIT')
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawASI()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.SetUpdateASIChart = function (option) {
+    this.Option = option
+    this.Datas = option.datas
+    this.YAxisChart.SetUpdateYAxis(this.Option)
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawASI()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.DrawASI = function () {
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['ASI']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'ASI')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['ASIT']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'ASIT')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+  }
+
+  this.DrawCurve = function (i, attrName) {
+    this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
+    this.StartY = this.Option.cEndY - (this.Datas[i][attrName] - this.YAxisChart.MinDatas) * this.YNumpx - Basic.chartPd
+    if (i === 0) {
+      this.Canvas.moveTo(this.StartX, this.StartY)
+    }
+    this.Canvas.lineTo(this.StartX, this.StartY)
+  }
+
+  // 绘制当前信息
+  this.DrawCurMsg = function (canvas, option) {
+    let curMsg = option.curMsg
+    let text = 'ASI  ' + 'ASI= ' + curMsg['ASI'].toFixed(2) + ',ASIT= ' + curMsg['ASIT'].toFixed(2)
+    canvas.strokeStyle = '#cdcdcd'
+    canvas.fillStyle = '#f2faff'
+    canvas.strokeRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.fillRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.beginPath()
+    canvas.font = "18px Verdana"
+    canvas.fillStyle = "#333"
+    canvas.fillText(text, option.cStartX + 40, option.cStartY + 20)
+    canvas.closePath()
+    // canvas.stroke()
+  }
+}
+
+function KDJChart (canvas, option) {
+  this.Canvas = canvas
+  this.Option = option
+  this.Datas = option.datas
+  this.StartX = 0
+  this.StartY = 0
+  this.EndX = 0
+  this.EndY = 0
+  this.Create = function () {
+    this.YAxisChart = new YAxis(this.Canvas, this.Option)
+    this.YAxisChart.Create('K', 'D', 'J')
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawKDJ()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.SetUpdateASIChart = function (option) {
+    this.Option = option
+    this.Datas = option.datas
+    this.YAxisChart.SetUpdateYAxis(this.Option)
+    this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+    this.DrawKDJ()
+    let range = {
+      minData: this.YAxisChart.MinDatas,
+      maxData: this.YAxisChart.MaxDatas
+    }
+    return range
+  }
+
+  this.DrawKDJ = function () {
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['K']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'K')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['D']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'D')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = this.Option.style['J']
+    this.Canvas.lineWidth = 1
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawCurve(i, 'J')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+  }
+
+  this.DrawCurve = function (i, attrName) {
+    this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
+    this.StartY = this.Option.cEndY - (this.Datas[i][attrName] - this.YAxisChart.MinDatas) * this.YNumpx - Basic.chartPd
+    if (i === 0) {
+      this.Canvas.moveTo(this.StartX, this.StartY)
+    }
+    this.Canvas.lineTo(this.StartX, this.StartY)
+  }
+
+  // 绘制当前信息
+  this.DrawCurMsg = function (canvas, option) {
+    let curMsg = option.curMsg
+    let text = 'KDJ  ' + 'K= ' + curMsg['K'].toFixed(2) + ',D= ' + curMsg['D'].toFixed(2) + ',J= ' + curMsg['J'].toFixed(2)
+    canvas.strokeStyle = '#cdcdcd'
+    canvas.fillStyle = '#f2faff'
+    canvas.strokeRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.fillRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
+    canvas.beginPath()
+    canvas.font = "18px Verdana"
+    canvas.fillStyle = "#333"
+    canvas.fillText(text, option.cStartX + 40, option.cStartY + 20)
+    canvas.closePath()
+    // canvas.stroke()
+  }
 }
 
 function RSIChart (canvas, option) {
