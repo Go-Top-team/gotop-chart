@@ -178,8 +178,9 @@ function QTChart (divElement) {
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
     this.SetUpdate()
   }
-  this.RemoveChart = function (option) {
-    this.ChartArray.splice(option.index, 1)
+  this.RemoveChart = function (option, i) {
+    console.log('remove:', i)
+    this.ChartArray.splice(i, 1)
     this.CalCHeightRatio()
     var canvasHeight = Basic.height
     var addHeight = 0
@@ -338,7 +339,7 @@ function QTChart (divElement) {
       $("#" + frameTool.id).click(function () {
         var option = _self.ChartArray[this.dataset.id]
         console.log('remove:', this.dataset.id)
-        _self.RemoveChart(option)
+        _self.RemoveChart(option, this.dataset.id)
       })
     }
   }
@@ -579,6 +580,7 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+      // this.DrawWeiLian(i, this.Datas[i])
       if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'ding') {
         if (this.turnStatus == 'di' || this.turnStatus == '') {
           this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
@@ -721,6 +723,27 @@ function KLinesChart (canvas, option) {
     this.Canvas.closePath()
   }
 
+  this.DrawWeiLian = function (i, curMsg) {
+    if (i <= 3) {
+      return
+    }
+    let centerX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * (i - 2) + (Basic.kLineWidth / 2) + this.Option.cStartX
+    let centerY = 0
+    let r = 5
+    this.Canvas.beginPath()
+    if (this.Datas[i - 4].high < this.Datas[i - 2].high && this.Datas[i - 3].high < this.Datas[i - 2].high && this.Datas[i - 2].high > this.Datas[i - 1].high && this.Datas[i - 2].high > this.Datas[i].high) {
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.Datas[i - 2].high - this.YAxisChart.MinDatas) * this.YNumpx - r + this.Option.cStartY + Basic.curMsgContainerHeight
+      this.Canvas.fillStyle = Basic.upColor
+    }
+    if (this.Datas[i - 4].low > this.Datas[i - 2].low && this.Datas[i - 3].low > this.Datas[i - 2].low && this.Datas[i - 2].low < this.Datas[i - 1].low && this.Datas[i - 2].low < this.Datas[i].low) {
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (this.Datas[i - 2].low - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
+      this.Canvas.fillStyle = Basic.downColor
+    }
+    this.Canvas.arc(centerX, centerY, r, 0, 2 * Math.PI)
+    this.Canvas.fill()
+    this.Canvas.closePath()
+  }
+
   this.setMaxValue = function (i, value) {
     if (this.turnStatus == 'ding') {
       if (value >= this.maxTop.value) {
@@ -754,7 +777,7 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-
+      // this.DrawWeiLian(i, this.Datas[i])
       if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'ding') {
         if (this.turnStatus == 'di' || this.turnStatus == '') {
           this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
