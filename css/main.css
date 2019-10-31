@@ -59,6 +59,17 @@ body{
   -moz-osx-font-smoothing: grayscale;
 }
 
+.indicators-dialog{
+  background: #fff;
+  width: 100px;
+  text-align: center;
+  border: 1px solid #cdcdcd;
+}
+.indicators-dialog_item{
+  border-bottom: 1px solid #cdcdcd;
+  cursor: pointer;
+}
+
 .icon{
   font-size: 20px;
 }

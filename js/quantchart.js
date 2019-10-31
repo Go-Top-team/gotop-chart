@@ -19,6 +19,35 @@ var Basic = {
   volDownColor: 'rgba(239,83,80,0.5)',
 }
 
+var IndicatorsList = [
+  {
+    name: 'vol',
+  },
+  {
+    name: 'macd',
+    style: {
+      DIFF: '#fa5252',
+      DEA: '#5f5fff',
+      MACD: '#fa5252'
+    }
+  },
+  {
+    name: 'rsi',
+    style: {
+      RSI6: '#f71c17',
+      RSI12: '#0680e0',
+      RSI24: '#04477b'
+    }
+  },
+  {
+    name: 'asi',
+    style: {
+      ASI: '#f71c17',
+      ASIT: '#0680e0',
+    }
+  }
+]
+
 function QTChart (divElement) {
   this.DivElement = divElement;
   this.TopToolContainer = new TopToolContainer()
@@ -46,7 +75,7 @@ function QTChart (divElement) {
   this.StepPixel = 4
   this.FrameToolIds = [] //frame tool 的ID集
   this.ChartObjArray = []
-
+  var _self = this
   this.BindEvents = function () {
     $("#go-date").click(
       function (e) {
@@ -90,6 +119,16 @@ function QTChart (divElement) {
         _self.SetUpdate()
       }
     );
+    $("#indicators-btn").click(
+      function (e) {
+        console.log(e)
+        if (_self.IndicatorsDialog) {
+          _self.IndicatorsDialog.style.display = 'block'
+        } else {
+          _self.CreateIndicatorsDialog(e.currentTarget.offsetLeft)
+        }
+      }
+    )
   }
   // 窗口初始化
   this.OnSize = function () {
@@ -137,6 +176,7 @@ function QTChart (divElement) {
   this.SetOption = function (options) {
     this.ChartArray = options.chartArray.sort(sortBy('index'))
     this.CalCHeightRatio()
+    this.CalculationIndicators()
     var canvasHeight = Basic.height
     var addHeight = 0
     // 计算各个图表在Canvas中的位置坐标
@@ -157,6 +197,30 @@ function QTChart (divElement) {
     this.SplitDatas(this.DataPreIndex, this.DataCurIndex)
     this.Draw()
   }
+  this.CalculationIndicators = function (indicatorName) {
+    var datas
+    if (Basic.OrignDatas['kline']) {
+      datas = Basic.OrignDatas['kline']
+    } else {
+      datas = this.ChartArray[0].datas
+    }
+
+    if (indicatorName && indicatorName != 'kline' && indicatorName != 'vol') {
+      var c = hxc3.IndicatorFormula.getClass(indicatorName);
+      var indicator = new c();
+      var iDatas = indicator.calculate(datas);
+      return iDatas
+    }
+
+    for (var j in this.ChartArray) {
+      if (this.ChartArray[j].name != 'kline' && this.ChartArray[j].name != 'vol') {
+        var c = hxc3.IndicatorFormula.getClass(this.ChartArray[j].name);
+        var indicator = new c();
+        var iDatas = indicator.calculate(datas);
+        this.ChartArray[j].datas = iDatas
+      }
+    }
+  }
   this.AddChart = function (option) {
     option.index = this.ChartArray.length
     Basic.OrignDatas[option.name] = option.datas
@@ -176,7 +240,10 @@ function QTChart (divElement) {
     this.CreateFrameTool()
     this.CalSceenKNum()
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
-    this.SetUpdate()
+    this.SplitDatas(this.DataPreIndex, this.DataCurIndex)
+    this.Canvas.clearRect(0, 0, Basic.width, Basic.height)
+    console.log('option:', option)
+    this.Draw()
   }
   this.RemoveChart = function (option, i) {
     console.log('remove:', i)
@@ -239,8 +306,6 @@ function QTChart (divElement) {
         this.ChartArray[i].datas = Basic.OrignDatas[this.ChartArray[i].name].slice(pre, cur + 1)
       }
     }
-    // var inpre = pre - Basic.ScreenKNum >= 0 ? pre - Basic.ScreenKNum : 0
-    // this.SplitIndicatorsDatas(inpre, cur + Basic.ScreenKNum)
   }
   // 指标数据截取
   this.SplitIndicatorsDatas = function (pre, cur) {
@@ -303,7 +368,6 @@ function QTChart (divElement) {
     if (pre == this.DataPreIndex || cur == this.DataCurIndex) return
   }
   // 事件监听
-  var _self = this
   this.OptCanvasElement.onmousemove = function (e) {
     _self.onDrawCursor(e.offsetX, e.offsetY)
     if (!this.isDrag) {
@@ -349,6 +413,36 @@ function QTChart (divElement) {
       this.DivElement.removeChild(document.getElementById(this.FrameToolIds[i]))
     }
     this.FrameToolIds = []
+  }
+  this.CreateIndicatorsDialog = function (x) {
+    var dialog = document.createElement('div')
+    dialog.className = "indicators-dialog"
+    dialog.id = Guid()
+    dialog.style.position = 'absolute'
+    dialog.style.top = parseInt(this.TopToolDiv.style.height.replace("px", ""))
+    dialog.style.left = x + 'px'
+    dialog.style.zIndex = 3
+    dialog.style.fontSize = 18 + 'px'
+    this.IndicatorsDialog = dialog
+    this.DivElement.appendChild(this.IndicatorsDialog)
+    for (var i = 0; i < IndicatorsList.length; i++) {
+      var item = document.createElement('div')
+      item.className = "indicators-dialog_item"
+      item.id = Guid()
+      item.innerText = IndicatorsList[i].name
+      item.dataset.id = i
+      this.IndicatorsDialog.appendChild(item)
+      $("#" + item.id).click(function (e) {
+        IndicatorsList[this.dataset.id].name != 'vol' ? IndicatorsList[this.dataset.id].datas = _self.CalculationIndicators(IndicatorsList[this.dataset.id].name) : IndicatorsList[this.dataset.id].datas = Basic.OrignDatas.kline
+        _self.AddChart(IndicatorsList[this.dataset.id])
+        _self.IndicatorsDialog.style.display = 'none'
+      })
+    }
+
+    for (var j in IndicatorsList) {
+      var id = IndicatorsList[j]['name']
+
+    }
   }
   // 开始绘制
   this.Draw = function () {
@@ -538,7 +632,7 @@ function TopToolContainer () {
     this.TopTool.innerHTML =
       ' <input id="dateinput" value="2019-08-20T14:00:00Z" class="go-date-input" />\n' +
       ' <button id="go-date" class="go-date-btn">跳 转</button>\n' +
-      ' <div class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n'
+      ' <div id="indicators-btn" class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n'
     return this.TopTool
   }
 }

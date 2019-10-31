@@ -26,23 +26,6 @@
   <div id="kline" style="width: 900px;height:400px;position: relative;"></div>
   <script>
     function KLineChart(divKLine) {
-      var MACD = hxc3.IndicatorFormula.getClass('macd');
-      var macdIndicator = new MACD();
-      var macdDatas = macdIndicator.calculate(kLines);
-
-      var RSI = hxc3.IndicatorFormula.getClass('rsi');
-      var rsiIndicator = new RSI();
-      var rsiDatas = rsiIndicator.calculate(kLines);
-
-      var ASI = hxc3.IndicatorFormula.getClass('asi');
-      var asiIndicator = new ASI();
-      var asiDatas = asiIndicator.calculate(kLines);
-
-      var KDJ = hxc3.IndicatorFormula.getClass('kdj');
-      var kdjIndicator = new KDJ();
-      var kdjDatas = kdjIndicator.calculate(kLines);
-
-      console.log('kdj:', macdDatas)
       this.DivKLine = divKLine;
       this.Chart = QTChart.Init(divKLine);   //把K线图绑定到一个Div上
       this.Option = {
@@ -62,7 +45,6 @@
           {
             name: 'macd',
             index: 2,
-            datas: macdDatas,
             style: {
               DIFF: '#fa5252',
               DEA: '#5f5fff',
@@ -72,7 +54,6 @@
           {
             name: 'rsi',
             index: 3,
-            datas: rsiDatas,
             style: {
               RSI6: '#f71c17',
               RSI12: '#0680e0',
@@ -82,7 +63,6 @@
           {
             name: 'asi',
             index: 4,
-            datas: asiDatas,
             style: {
               ASI: '#f71c17',
               ASIT: '#0680e0',
@@ -91,7 +71,6 @@
           {
             name: 'kdj',
             index: 5,
-            datas: kdjDatas,
             style: {
               K: '#f71c17',
               D: '#0680e0',
