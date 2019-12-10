@@ -129,6 +129,12 @@ function QTChart (divElement) {
         }
       }
     )
+    // 保存买卖点
+    $('#save-signal-btn').click(
+      function (e) {
+        saveJsonToFile()
+      }
+    )
   }
   // 窗口初始化
   this.OnSize = function () {
@@ -386,6 +392,17 @@ function QTChart (divElement) {
   this.OptCanvasElement.onmousewheel = function (e) {
     _self.onKLineScale(e.wheelDelta)
   }
+  this.OptCanvasElement.ondblclick = function (e) {
+    var x = e.x
+    var y = e.y
+    x *= Basic.pixelTatio
+    y *= Basic.pixelTatio
+    if (Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal']) {
+      _self.CreateDlbDialog(x, y, true)
+    } else {
+      _self.CreateDlbDialog(x, y, false)
+    }
+  }
   // 创建每个窗口的操作工具  关闭按钮、更换指标
   this.CreateFrameTool = function () {
     for (var i in this.ChartArray) {
@@ -414,6 +431,90 @@ function QTChart (divElement) {
     }
     this.FrameToolIds = []
   }
+  // 创建鼠标双击窗口
+  this.CreateDlbDialog = function (x, y, is_exist) {
+    if (this.DLBDialog) {
+      this.DivElement.removeChild(this.DLBDialog)
+    }
+    var dialog = document.createElement('div')
+    dialog.className = "dlbclick-dialog"
+    dialog.id = Guid()
+    dialog.style.position = 'absolute'
+    dialog.style.top = y + 'px'
+    dialog.style.left = x + 'px'
+    dialog.style.zIndex = 3
+    dialog.style.fontSize = 18 + 'px'
+    this.DLBDialog = dialog
+    this.DivElement.appendChild(this.DLBDialog)
+    var item = document.createElement('div')
+    item.className = "dlbclick-dialog_item"
+    item.id = Guid()
+    item.innerText = '插入买点'
+    item.dataset.id = 'buy'
+    if (is_exist) {
+      item.style.display = 'none'
+    }
+    this.DLBDialog.appendChild(item)
+    var item1 = document.createElement('div')
+    item1.className = "dlbclick-dialog_item"
+    item1.id = Guid()
+    item1.innerText = '插入卖点'
+    item1.dataset.id = 'sell'
+    if (is_exist) {
+      item1.style.display = 'none'
+    }
+    this.DLBDialog.appendChild(item1)
+    var del = document.createElement('div')
+    del.className = "dlbclick-dialog_item"
+    del.id = Guid()
+    del.innerText = '删除信号'
+    del.dataset.id = 'del'
+    if (!is_exist) {
+      del.style.display = 'none'
+    }
+    this.DLBDialog.appendChild(del)
+    var cancel = document.createElement('div')
+    cancel.className = "dlbclick-dialog_item"
+    cancel.id = Guid()
+    cancel.innerText = '取消操作'
+    cancel.dataset.id = 'cancel'
+    this.DLBDialog.appendChild(cancel)
+    $('#' + item.id).click(function (e) {
+      console.log('插入买点', _self.cur_kn)
+      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
+        price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
+        type: 'buy'
+      }
+      _self.DivElement.removeChild(_self.DLBDialog)
+      _self.DLBDialog = null
+      _self.SetUpdate()
+    })
+    $('#' + item1.id).click(function (e) {
+      console.log('插入卖点')
+      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
+        price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
+        type: 'sell'
+      }
+      _self.DivElement.removeChild(_self.DLBDialog)
+      _self.DLBDialog = null
+      _self.SetUpdate()
+    })
+    $('#' + del.id).click(function (e) {
+      console.log('删除')
+      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = null
+      _self.DivElement.removeChild(_self.DLBDialog)
+      _self.DLBDialog = null
+      _self.SetUpdate()
+    })
+    $('#' + cancel.id).click(function (e) {
+      console.log('取消')
+      _self.DivElement.removeChild(_self.DLBDialog)
+      _self.DLBDialog = null
+      _self.SetUpdate()
+    })
+
+  }
+  // 创建指标窗口
   this.CreateIndicatorsDialog = function (x) {
     var dialog = document.createElement('div')
     dialog.className = "indicators-dialog"
@@ -438,10 +539,8 @@ function QTChart (divElement) {
         _self.IndicatorsDialog.style.display = 'none'
       })
     }
-
     for (var j in IndicatorsList) {
       var id = IndicatorsList[j]['name']
-
     }
   }
   // 开始绘制
@@ -508,6 +607,7 @@ function QTChart (divElement) {
     } else if (kn <= 0) {
       kn = 1
     }
+    this.cur_kn = kn
     var cursorX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * kn - Basic.kLineMarginRight - Basic.kLineWidth / 2
     let chartConfig = null
     for (let i in this.ChartArray) {
@@ -632,7 +732,8 @@ function TopToolContainer () {
     this.TopTool.innerHTML =
       ' <input id="dateinput" value="2019-08-20T14:00:00Z" class="go-date-input" />\n' +
       ' <button id="go-date" class="go-date-btn">跳 转</button>\n' +
-      ' <div id="indicators-btn" class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n'
+      ' <div id="indicators-btn" class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n' +
+      ' <div id="save-signal-btn" class="save-signal-btn"><span class="iconfont icon-baocun"></span> 保存买卖点 </div>\n'
     return this.TopTool
   }
 }
@@ -1608,6 +1709,13 @@ function ToFixedPoint (value) {
 function ToFixedRect (value) {
   var rounded;
   return rounded = (0.5 + value) << 0;
+}
+
+function saveJsonToFile () {
+  var data = Basic.OrignDatas.kline
+  var content = JSON.stringify(data)
+  var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  saveAs(blob, "buySellSign.json");
 }
 
 

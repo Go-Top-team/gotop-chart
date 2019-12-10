@@ -41,6 +41,18 @@ body{
 .indicators:hover{
   background: #ecf0fb;
 }
+.save-signal-btn{
+  width: 140px;
+  text-align: center;
+  height: 44px;
+  line-height: 44px;
+  border-right: 1px solid #e0e3eb;
+  border-left: 2px solid #e0e3eb;
+  font-size: 16px;
+}
+.save-signal-btn:hover{
+  background: #ecf0fb;
+}
 .jschart-drawing{
   position: absolute;
   z-index: 1;
@@ -68,6 +80,18 @@ body{
 .indicators-dialog_item{
   border-bottom: 1px solid #cdcdcd;
   cursor: pointer;
+}
+.dlbclick-dialog{
+  background: #fff;
+  width: 100px;
+  text-align: center;
+  border: 1px solid #cdcdcd;
+}
+.dlbclick-dialog_item{
+  border-bottom: 1px solid #cdcdcd;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
 }
 
 .icon{
