@@ -2,6 +2,7 @@ var Basic = {
   OrignDatas: {
 
   },
+  period: 30, // 1 5 15 30 60   显示分钟数，一天的话就是24小时*60 = 1440  
   curMsgContainerHeight: 50,
   yAxisWidth: 50,
   xAxisHeight: 30,
@@ -19,8 +20,7 @@ var Basic = {
   volDownColor: 'rgba(239,83,80,0.5)',
 }
 
-var IndicatorsList = [
-  {
+var IndicatorsList = [{
     name: 'vol',
   },
   {
@@ -48,7 +48,7 @@ var IndicatorsList = [
   }
 ]
 
-function QTChart (divElement) {
+function QTChart(divElement) {
   this.DivElement = divElement;
   this.TopToolContainer = new TopToolContainer()
   this.TopToolDiv = this.TopToolContainer.Create()
@@ -135,6 +135,16 @@ function QTChart (divElement) {
         saveJsonToFile()
       }
     )
+    // 切换周期
+    $('#period-select').change(function () {
+      Basic.period = $('#period-select').val()
+      _self.Canvas.clearRect(0, 0, Basic.width, Basic.height)
+      option = {
+        chartArray: _self.ChartArray
+      }
+      _self.SetOption(option)
+    })
+    $('#period-select').val(Basic.period)
   }
   // 窗口初始化
   this.OnSize = function () {
@@ -142,7 +152,7 @@ function QTChart (divElement) {
     var height = parseInt(this.DivElement.style.height.replace("px", ""));
     if (this.TopToolDiv) {
       //TODO调整工具条大小
-      height -= this.TopToolDiv.style.height.replace("px", "");   //减去工具条的高度
+      height -= this.TopToolDiv.style.height.replace("px", ""); //减去工具条的高度
     }
 
     this.CanvasElement.height = height;
@@ -178,9 +188,37 @@ function QTChart (divElement) {
     Basic.height = this.CanvasElement.height
     this.BindEvents()
   }
+  this.ChangePeriod = function (chartArray) {
+    if (Basic.period == 1) {
+      kLines1 && (chartArray[0].datas = kLines1)
+      bi1 && (chartArray[0].topLowDatas = bi1)
+      centre1 && (chartArray[0].centreDatas = centre1)
+      duan1 && (chartArray[0].xianDuanDatas = duan1)
+      kLines1 && (chartArray[1].datas = kLines1)
+    } else if (Basic.period == 5) {
+      kLines5 && (chartArray[0].datas = kLines5)
+      bi5 && (chartArray[0].topLowDatas = bi5)
+      centre5 && (chartArray[0].centreDatas = centre5)
+      duan5 && (chartArray[0].xianDuanDatas = duan5)
+      kLines5 && (chartArray[1].datas = kLines5)
+    } else if (Basic.period == 15) {
+      kLines15 && (chartArray[0].datas = kLines15)
+      bi15 && (chartArray[0].topLowDatas = bi15)
+      centre15 && (chartArray[0].centreDatas = centre15)
+      duan15 && (chartArray[0].xianDuanDatas = duan15)
+      kLines15 && (chartArray[1].datas = kLines15)
+    } else if (Basic.period == 30) {
+      kLines30 && (chartArray[0].datas = kLines30)
+      bi30 && (chartArray[0].topLowDatas = bi30)
+      centre30 && (chartArray[0].centreDatas = centre30)
+      duan30 && (chartArray[0].xianDuanDatas = duan30)
+      kLines30 && (chartArray[1].datas = kLines30)
+    }
+    return chartArray
+  }
   // 设置配置
   this.SetOption = function (options) {
-    this.ChartArray = options.chartArray.sort(sortBy('index'))
+    this.ChartArray = this.ChangePeriod(options.chartArray.sort(sortBy('index')))
     this.CalCHeightRatio()
     this.CalculationIndicators()
     var canvasHeight = Basic.height
@@ -248,11 +286,9 @@ function QTChart (divElement) {
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
     this.SplitDatas(this.DataPreIndex, this.DataCurIndex)
     this.Canvas.clearRect(0, 0, Basic.width, Basic.height)
-    console.log('option:', option)
     this.Draw()
   }
   this.RemoveChart = function (option, i) {
-    console.log('remove:', i)
     this.ChartArray.splice(i, 1)
     this.CalCHeightRatio()
     var canvasHeight = Basic.height
@@ -363,10 +399,10 @@ function QTChart (divElement) {
 
     if (dataStep > 0) {
       // 画布向右拖动，数据往左移动
-      pre != 0 && (pre-- , cur--)
+      pre != 0 && (pre--, cur--)
     } else if (dataStep < 0) {
       // 画布向左拖动，数据往右移动
-      cur != Basic.OrignDatas.kline.length - 1 && (cur++ , pre++)
+      cur != Basic.OrignDatas.kline.length - 1 && (cur++, pre++)
     }
     this.DataPreIndex = pre
     this.DataCurIndex = cur
@@ -556,7 +592,7 @@ function QTChart (divElement) {
           this.kLineChart = kLineChart
           this.ChartObjArray.push(this.kLineChart)
           this.xAxisChart.Create()
-          console.log('topLow:', this.ChartArray[i].topLowDatas)
+          console.log('topLow:', this.ChartArray[i].topLowDatas, this.ChartArray[i].xianDuanDatas)
           this.ChartArray[i].yRange = this.kLineChart.Create()
           break;
         case 'vol':
@@ -710,8 +746,8 @@ function QTChart (divElement) {
     } else {
       Basic.kLineWidth -= 2
       Basic.kLineMarginRight -= 1
-      Basic.kLineWidth < 6 && (Basic.kLineWidth = 6)
-      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 2)
+      Basic.kLineWidth < 6 && (Basic.kLineWidth = 2)
+      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 1)
     }
     this.CalSceenKNum()
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
@@ -722,7 +758,7 @@ function QTChart (divElement) {
 /**
  * @desc 顶部工具栏组件
  */
-function TopToolContainer () {
+function TopToolContainer() {
   this.TopTool
   this.Create = function (callback) {
     this.TopTool = document.createElement('div')
@@ -732,6 +768,12 @@ function TopToolContainer () {
     this.TopTool.innerHTML =
       ' <input id="dateinput" value="2019-08-20T14:00:00Z" class="go-date-input" />\n' +
       ' <button id="go-date" class="go-date-btn">跳 转</button>\n' +
+      ' <select id="period-select">\n' +
+      ' <option value="1">1min</option>\n' +
+      ' <option value="5">5min</option>\n' +
+      ' <option value="15">15min</option>\n' +
+      ' <option value="30">30min</option>\n' +
+      ' </select>\n' +
       ' <div id="indicators-btn" class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n' +
       ' <div id="save-signal-btn" class="save-signal-btn"><span class="iconfont icon-baocun"></span> 保存买卖点 </div>\n'
     return this.TopTool
@@ -743,11 +785,13 @@ function TopToolContainer () {
  * @param {画布} canvas 
  * @param {配置} option 
  */
-function KLinesChart (canvas, option) {
+function KLinesChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
   this.TopLowDatas = option.topLowDatas
+  this.XianDuanDatas = option.xianDuanDatas
+  this.CentreDatas = option.centreDatas
   this.YNumpx = 0
   this.StartX = 0
   this.StartY = 0
@@ -770,41 +814,13 @@ function KLinesChart (canvas, option) {
     this.YAxisChart = new YAxis(this.Canvas, this.Option)
     this.YAxisChart.Create('low', 'high')
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
-    console.log('toplow:', Object.keys(this.TopLowDatas).length)
-    console.log()
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      // this.DrawWeiLian(i, this.Datas[i])
-      if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'ding') {
-        if (this.turnStatus == 'di' || this.turnStatus == '') {
-          this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
-          this.maxTop.value = this.Datas[i].high
-          this.maxTop.index = i
-          this.drawTopLowPoint.top = this.maxTop
-          this.turnStatus = 'ding'
-        } else if (this.turnStatus == 'ding') {
-          this.setMaxValue(i, this.Datas[i].high)
-          i == j - 1 && this.DrawTopLowLine()
-        }
-        if (this.Datas[i].day == Object.keys(this.TopLowDatas).splice(-1)) {
-          this.DrawTopLowLine()
-        }
-      } else if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'di') {
-        if (this.turnStatus == 'ding' || this.turnStatus == '') {
-          this.turnStatus == 'ding' && this.DrawTopLowLine() // +绘制
-          this.maxLow.value = this.Datas[i].low
-          this.maxLow.index = i
-          this.drawTopLowPoint.low = this.maxLow
-          this.turnStatus = 'di'
-        } else if (this.turnStatus == 'di') {
-          this.setMaxValue(i, this.Datas[i].low)
-          i == j - 1 && this.DrawTopLowLine()
-        }
-        if (this.Datas[i].day == Object.keys(this.TopLowDatas).splice(-1)) {
-          this.DrawTopLowLine()
-        }
-      }
+      this.TopLowDatas[this.Datas[i].day] && this.DrawBi(this.TopLowDatas[this.Datas[i].day], i, j)
+      this.XianDuanDatas[this.Datas[i].day] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].day], i, j)
+      this.CentreDatas[this.Datas[i].day] && this.DrawCentre(this.CentreDatas[this.Datas[i].day], i, j)
+      console.log(this.CentreDatas[this.Datas[i].day])
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
@@ -900,7 +916,85 @@ function KLinesChart (canvas, option) {
     this.Canvas.stroke()
     this.Canvas.closePath()
   }
-
+  this.DrawBi = function (obj, index, length) {
+    var tstartX, tstartY, lstartX, lstartY
+    if (obj.Type == 'top') {
+      t = (new Date(obj.BottomTime).getTime() - new Date(obj.TopTime).getTime()) / 1000 / Basic.period / 60
+      index2 = index + t
+      if (index2 > length) {
+        return
+      }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    } else {
+      t = (new Date(obj.TopTime).getTime() - new Date(obj.BottomTime).getTime()) / 1000 / Basic.period / 60
+      index2 = index + t
+      if (index2 > length) {
+        return
+      }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    }
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = '#f72b27'
+    this.Canvas.lineWidth = 1
+    this.Canvas.moveTo(ToFixedPoint(tstartX), ToFixedPoint(tstartY))
+    this.Canvas.lineTo(ToFixedPoint(lstartX), ToFixedPoint(lstartY))
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+  }
+  this.DrawDuan = function (obj, index, length) {
+    var tstartX, tstartY, lstartX, lstartY
+    if (obj.Type == 'up') {
+      t = (new Date(obj.BottomTime).getTime() - new Date(obj.TopTime).getTime()) / 1000 / Basic.period / 60
+      index2 = index + t
+      if (index2 > length) {
+        return
+      }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    } else {
+      t = (new Date(obj.TopTime).getTime() - new Date(obj.BottomTime).getTime()) / 1000 / Basic.period / 60
+      index2 = index + t
+      if (index2 > length) {
+        return
+      }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    }
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = '#ffc400'
+    this.Canvas.lineWidth = 2
+    this.Canvas.moveTo(ToFixedPoint(tstartX), ToFixedPoint(tstartY))
+    this.Canvas.lineTo(ToFixedPoint(lstartX), ToFixedPoint(lstartY))
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+  }
+  this.DrawCentre = function (obj, index, length) {
+    t = (new Date(obj.EndTime).getTime() - new Date(obj.BeginTime).getTime()) / 1000 / Basic.period / 60
+    index2 = index + t
+    if (index2 > length) {
+      return
+    }
+    startX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+    startY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Max - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    endX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+    endY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Min - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+    this.Canvas.beginPath()
+    this.Canvas.strokeStyle = '#0093ff'
+    this.Canvas.lineWidth = 2
+    this.Canvas.strokeRect(startX, startY, endX - startX, endY - startY)
+    console.log(startX, startY, endX, endY)
+    this.Canvas.closePath()
+  }
   this.DrawTopLowLine = function () {
     if (!this.drawTopLowPoint['top'] || !this.drawTopLowPoint['low']) {
       return
@@ -963,37 +1057,15 @@ function KLinesChart (canvas, option) {
     this.YAxisChart.SetUpdateYAxis(this.Option)
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
     this.turnStatus = ""
-    this.maxLow = {
-    }
-    this.maxTop = {
-    }
-    this.drawTopLowPoint = {
-    }
+    this.maxLow = {}
+    this.maxTop = {}
+    this.drawTopLowPoint = {}
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      // this.DrawWeiLian(i, this.Datas[i])
-      if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'ding') {
-        if (this.turnStatus == 'di' || this.turnStatus == '') {
-          this.turnStatus == 'di' && this.DrawTopLowLine() // +绘制
-          this.maxTop.value = this.Datas[i].high
-          this.maxTop.index = i
-          this.turnStatus = 'ding'
-        } else if (this.turnStatus == 'ding') {
-          this.setMaxValue(i, this.Datas[i].high)
-          i == j - 1 && this.DrawTopLowLine()
-        }
-      } else if (this.TopLowDatas[this.Datas[i].day] && this.TopLowDatas[this.Datas[i].day] == 'di') {
-        if (this.turnStatus == 'ding' || this.turnStatus == '') {
-          this.turnStatus == 'ding' && this.DrawTopLowLine() // +绘制
-          this.maxLow.value = this.Datas[i].low
-          this.maxLow.index = i
-          this.turnStatus = 'di'
-        } else if (this.turnStatus == 'di') {
-          this.setMaxValue(i, this.Datas[i].low)
-          i == j - 1 && this.DrawTopLowLine()
-        }
-      }
+      this.TopLowDatas[this.Datas[i].day] && this.DrawBi(this.TopLowDatas[this.Datas[i].day], i, j)
+      this.XianDuanDatas[this.Datas[i].day] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].day], i, j)
+      this.CentreDatas[this.Datas[i].day] && this.DrawCentre(this.CentreDatas[this.Datas[i].day], i, j)
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
@@ -1008,7 +1080,7 @@ function KLinesChart (canvas, option) {
  * @param {画布} canvas 
  * @param {配置} option 
  */
-function VolChart (canvas, option) {
+function VolChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1085,7 +1157,7 @@ function VolChart (canvas, option) {
  * @param {画布} cavnas 
  * @param {配置} option 
  */
-function MACDChart (canvas, option) {
+function MACDChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1211,7 +1283,7 @@ function MACDChart (canvas, option) {
 
 }
 
-function ASIChart (canvas, option) {
+function ASIChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1290,7 +1362,7 @@ function ASIChart (canvas, option) {
   }
 }
 
-function KDJChart (canvas, option) {
+function KDJChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1378,7 +1450,7 @@ function KDJChart (canvas, option) {
   }
 }
 
-function RSIChart (canvas, option) {
+function RSIChart(canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1479,7 +1551,7 @@ function RSIChart (canvas, option) {
   }
 }
 // Y轴画法
-function YAxis (canvas, option) {
+function YAxis(canvas, option) {
   this.Canvas = canvas
   this.StartX = option.cEndX - Basic.yAxisWidth
   this.StartY = option.cStartY + Basic.curMsgContainerHeight
@@ -1524,10 +1596,14 @@ function YAxis (canvas, option) {
         maxArray.push(maxData)
       }
       this.MinDatas = Math.min.apply(
-        Math, minArray.map(function (o) { return o })
+        Math, minArray.map(function (o) {
+          return o
+        })
       )
       this.MaxDatas = Math.max.apply(
-        Math, maxArray.map(function (o) { return o })
+        Math, maxArray.map(function (o) {
+          return o
+        })
       )
     } else {
       var dataArray = []
@@ -1537,10 +1613,14 @@ function YAxis (canvas, option) {
         }
       }
       this.MinDatas = Math.min.apply(
-        Math, dataArray.map(function (o) { return o })
+        Math, dataArray.map(function (o) {
+          return o
+        })
       )
       this.MaxDatas = Math.max.apply(
-        Math, dataArray.map(function (o) { return o })
+        Math, dataArray.map(function (o) {
+          return o
+        })
       )
     }
 
@@ -1619,7 +1699,7 @@ function YAxis (canvas, option) {
   }
 }
 // X轴画法
-function XAxis (canvas, option) {
+function XAxis(canvas, option) {
   this.Canvas = canvas
   this.StartX = 0
   this.StartY = Basic.height - Basic.xAxisHeight
@@ -1689,32 +1769,34 @@ QTChart.Init = function (divElement) {
   return qtchart
 }
 
-function GetDevicePixelRatio () {
+function GetDevicePixelRatio() {
   if (typeof (window) == 'undefined') return 1;
   return window.devicePixelRatio || 1;
 }
 
-function Guid () {
-  function S4 () {
+function Guid() {
+  function S4() {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
   }
   return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
 }
 
 //修正线段有毛刺
-function ToFixedPoint (value) {
+function ToFixedPoint(value) {
   return parseInt(value) + 0.5;
 }
 
-function ToFixedRect (value) {
+function ToFixedRect(value) {
   var rounded;
   return rounded = (0.5 + value) << 0;
 }
 
-function saveJsonToFile () {
+function saveJsonToFile() {
   var data = Basic.OrignDatas.kline
   var content = JSON.stringify(data)
-  var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  var blob = new Blob([content], {
+    type: "text/plain;charset=utf-8"
+  });
   saveAs(blob, "buySellSign.json");
 }
 
@@ -1723,13 +1805,13 @@ function saveJsonToFile () {
  * @desc 排序
  * @param {排序的key} field
  */
-function sortBy (field) {
+function sortBy(field) {
   return (x, y) => {
     return x[field] - y[field]
   }
 }
 
-function GetMyBrowser () {
+function GetMyBrowser() {
   var userAgent = navigator.userAgent // 取得浏览器的userAgent字符串
   var isOpera = userAgent.indexOf('Opera') > -1
   if (isOpera) {

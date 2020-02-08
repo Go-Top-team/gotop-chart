@@ -1,0 +1,1 @@
+var centre1 = {}
