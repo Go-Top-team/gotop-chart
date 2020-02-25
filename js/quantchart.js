@@ -21,34 +21,34 @@ var Basic = {
 }
 
 var IndicatorsList = [{
-    name: 'vol',
-  },
-  {
-    name: 'macd',
-    style: {
-      DIFF: '#fa5252',
-      DEA: '#5f5fff',
-      MACD: '#fa5252'
-    }
-  },
-  {
-    name: 'rsi',
-    style: {
-      RSI6: '#f71c17',
-      RSI12: '#0680e0',
-      RSI24: '#04477b'
-    }
-  },
-  {
-    name: 'asi',
-    style: {
-      ASI: '#f71c17',
-      ASIT: '#0680e0',
-    }
+  name: 'vol',
+},
+{
+  name: 'macd',
+  style: {
+    DIFF: '#fa5252',
+    DEA: '#5f5fff',
+    MACD: '#fa5252'
   }
+},
+{
+  name: 'rsi',
+  style: {
+    RSI6: '#f71c17',
+    RSI12: '#0680e0',
+    RSI24: '#04477b'
+  }
+},
+{
+  name: 'asi',
+  style: {
+    ASI: '#f71c17',
+    ASIT: '#0680e0',
+  }
+}
 ]
 
-function QTChart(divElement) {
+function QTChart (divElement) {
   this.DivElement = divElement;
   this.TopToolContainer = new TopToolContainer()
   this.TopToolDiv = this.TopToolContainer.Create()
@@ -132,7 +132,7 @@ function QTChart(divElement) {
     // 保存买卖点
     $('#save-signal-btn').click(
       function (e) {
-        saveJsonToFile()
+        saveJsonToFile(Basic.OrignDatas.kline, 'buySellSign')
       }
     )
     // 切换周期
@@ -399,10 +399,10 @@ function QTChart(divElement) {
 
     if (dataStep > 0) {
       // 画布向右拖动，数据往左移动
-      pre != 0 && (pre--, cur--)
+      pre != 0 && (pre-- , cur--)
     } else if (dataStep < 0) {
       // 画布向左拖动，数据往右移动
-      cur != Basic.OrignDatas.kline.length - 1 && (cur++, pre++)
+      cur != Basic.OrignDatas.kline.length - 1 && (cur++ , pre++)
     }
     this.DataPreIndex = pre
     this.DataCurIndex = cur
@@ -571,6 +571,10 @@ function QTChart(divElement) {
       this.IndicatorsDialog.appendChild(item)
       $("#" + item.id).click(function (e) {
         IndicatorsList[this.dataset.id].name != 'vol' ? IndicatorsList[this.dataset.id].datas = _self.CalculationIndicators(IndicatorsList[this.dataset.id].name) : IndicatorsList[this.dataset.id].datas = Basic.OrignDatas.kline
+        if (IndicatorsList[this.dataset.id].name == 'macd') {
+          console.log('指标数据：', IndicatorsList[this.dataset.id].datas)
+          saveJsonToFile(IndicatorsList[this.dataset.id].datas, 'macdDatas')
+        }
         _self.AddChart(IndicatorsList[this.dataset.id])
         _self.IndicatorsDialog.style.display = 'none'
       })
@@ -758,7 +762,7 @@ function QTChart(divElement) {
 /**
  * @desc 顶部工具栏组件
  */
-function TopToolContainer() {
+function TopToolContainer () {
   this.TopTool
   this.Create = function (callback) {
     this.TopTool = document.createElement('div')
@@ -785,7 +789,7 @@ function TopToolContainer() {
  * @param {画布} canvas 
  * @param {配置} option 
  */
-function KLinesChart(canvas, option) {
+function KLinesChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -918,26 +922,26 @@ function KLinesChart(canvas, option) {
   }
   this.DrawBi = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
-    if (obj.Type == 'top') {
-      t = (new Date(obj.BottomTime).getTime() - new Date(obj.TopTime).getTime()) / 1000 / Basic.period / 60
+    if (obj.type == 'bottom') {
+      t = (new Date(obj.bottom_time).getTime() - new Date(obj.top_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
       }
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
-      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
-      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.TopTime).getTime() - new Date(obj.BottomTime).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.top_time).getTime() - new Date(obj.bottom_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
       }
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
-      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
-      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     }
     this.Canvas.beginPath()
     this.Canvas.strokeStyle = '#f72b27'
@@ -949,26 +953,26 @@ function KLinesChart(canvas, option) {
   }
   this.DrawDuan = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
-    if (obj.Type == 'up') {
-      t = (new Date(obj.BottomTime).getTime() - new Date(obj.TopTime).getTime()) / 1000 / Basic.period / 60
+    if (obj.type == 'down') {
+      t = (new Date(obj.bottom_time).getTime() - new Date(obj.top_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
       }
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
-      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
-      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.TopTime).getTime() - new Date(obj.BottomTime).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.top_time).getTime() - new Date(obj.bottom_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
       }
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
-      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.Low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
-      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.High - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
+      lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     }
     this.Canvas.beginPath()
     this.Canvas.strokeStyle = '#ffc400'
@@ -1080,7 +1084,7 @@ function KLinesChart(canvas, option) {
  * @param {画布} canvas 
  * @param {配置} option 
  */
-function VolChart(canvas, option) {
+function VolChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1157,7 +1161,7 @@ function VolChart(canvas, option) {
  * @param {画布} cavnas 
  * @param {配置} option 
  */
-function MACDChart(canvas, option) {
+function MACDChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1283,7 +1287,7 @@ function MACDChart(canvas, option) {
 
 }
 
-function ASIChart(canvas, option) {
+function ASIChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1362,7 +1366,7 @@ function ASIChart(canvas, option) {
   }
 }
 
-function KDJChart(canvas, option) {
+function KDJChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1450,7 +1454,7 @@ function KDJChart(canvas, option) {
   }
 }
 
-function RSIChart(canvas, option) {
+function RSIChart (canvas, option) {
   this.Canvas = canvas
   this.Option = option
   this.Datas = option.datas
@@ -1551,7 +1555,7 @@ function RSIChart(canvas, option) {
   }
 }
 // Y轴画法
-function YAxis(canvas, option) {
+function YAxis (canvas, option) {
   this.Canvas = canvas
   this.StartX = option.cEndX - Basic.yAxisWidth
   this.StartY = option.cStartY + Basic.curMsgContainerHeight
@@ -1699,7 +1703,7 @@ function YAxis(canvas, option) {
   }
 }
 // X轴画法
-function XAxis(canvas, option) {
+function XAxis (canvas, option) {
   this.Canvas = canvas
   this.StartX = 0
   this.StartY = Basic.height - Basic.xAxisHeight
@@ -1769,35 +1773,36 @@ QTChart.Init = function (divElement) {
   return qtchart
 }
 
-function GetDevicePixelRatio() {
+function GetDevicePixelRatio () {
   if (typeof (window) == 'undefined') return 1;
   return window.devicePixelRatio || 1;
 }
 
-function Guid() {
-  function S4() {
+function Guid () {
+  function S4 () {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
   }
   return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
 }
 
 //修正线段有毛刺
-function ToFixedPoint(value) {
+function ToFixedPoint (value) {
   return parseInt(value) + 0.5;
 }
 
-function ToFixedRect(value) {
+function ToFixedRect (value) {
   var rounded;
   return rounded = (0.5 + value) << 0;
 }
 
-function saveJsonToFile() {
-  var data = Basic.OrignDatas.kline
+function saveJsonToFile (oData, fileName) {
+  // var data = Basic.OrignDatas.kline
+  var data = oData
   var content = JSON.stringify(data)
   var blob = new Blob([content], {
     type: "text/plain;charset=utf-8"
   });
-  saveAs(blob, "buySellSign.json");
+  saveAs(blob, fileName + '.json');
 }
 
 
@@ -1805,13 +1810,13 @@ function saveJsonToFile() {
  * @desc 排序
  * @param {排序的key} field
  */
-function sortBy(field) {
+function sortBy (field) {
   return (x, y) => {
     return x[field] - y[field]
   }
 }
 
-function GetMyBrowser() {
+function GetMyBrowser () {
   var userAgent = navigator.userAgent // 取得浏览器的userAgent字符串
   var isOpera = userAgent.indexOf('Opera') > -1
   if (isOpera) {
