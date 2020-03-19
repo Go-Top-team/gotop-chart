@@ -923,7 +923,7 @@ function KLinesChart (canvas, option) {
   this.DrawBi = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'bottom') {
-      t = (new Date(obj.bottom_time).getTime() - new Date(obj.top_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.begin_time).getTime() - new Date(obj.end_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -933,7 +933,7 @@ function KLinesChart (canvas, option) {
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
       lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.top_time).getTime() - new Date(obj.bottom_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.begin_time).getTime() - new Date(obj.end_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -954,7 +954,7 @@ function KLinesChart (canvas, option) {
   this.DrawDuan = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'down') {
-      t = (new Date(obj.bottom_time).getTime() - new Date(obj.top_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -964,7 +964,7 @@ function KLinesChart (canvas, option) {
       lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
       lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.top_time).getTime() - new Date(obj.bottom_time).getTime()) / 1000 / Basic.period / 60
+      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
       index2 = index + t
       if (index2 > length) {
         return
@@ -983,7 +983,7 @@ function KLinesChart (canvas, option) {
     this.Canvas.closePath()
   }
   this.DrawCentre = function (obj, index, length) {
-    t = (new Date(obj.EndTime).getTime() - new Date(obj.BeginTime).getTime()) / 1000 / Basic.period / 60
+    t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
     index2 = index + t
     if (index2 > length) {
       return
