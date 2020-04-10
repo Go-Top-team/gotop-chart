@@ -750,8 +750,8 @@ function QTChart (divElement) {
     } else {
       Basic.kLineWidth -= 2
       Basic.kLineMarginRight -= 1
-      Basic.kLineWidth < 6 && (Basic.kLineWidth = 2)
-      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 2)
+      Basic.kLineWidth < 6 && (Basic.kLineWidth = 1)
+      Basic.kLineMarginRight < 2 && (Basic.kLineMarginRight = 1)
     }
     this.CalSceenKNum()
     this.DataPreIndex = this.DataCurIndex + 1 - Math.floor(Basic.ScreenKNum)
