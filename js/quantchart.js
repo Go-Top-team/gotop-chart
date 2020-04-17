@@ -28,7 +28,10 @@ var IndicatorsList = [{
   style: {
     DIFF: '#fa5252',
     DEA: '#5f5fff',
-    MACD: '#fa5252'
+    MACD: {
+      'up':'#26a69a',
+      'down':'#fa5252'
+    }
   }
 },
 {
@@ -399,10 +402,10 @@ function QTChart (divElement) {
 
     if (dataStep > 0) {
       // 画布向右拖动，数据往左移动
-      pre != 0 && (pre--, cur--)
+      pre != 0 && (pre-=Math.ceil(8/Basic.kLineWidth), cur-=Math.ceil(8/Basic.kLineWidth))
     } else if (dataStep < 0) {
       // 画布向左拖动，数据往右移动
-      cur != Basic.OrignDatas.kline.length - 1 && (cur++, pre++)
+      cur != Basic.OrignDatas.kline.length - 1 && (cur+=Math.ceil(8/Basic.kLineWidth), pre+=Math.ceil(8/Basic.kLineWidth))
     }
     this.DataPreIndex = pre
     this.DataCurIndex = cur
@@ -411,12 +414,13 @@ function QTChart (divElement) {
   }
   // 事件监听
   this.OptCanvasElement.onmousemove = function (e) {
+    var pixelTatio = GetDevicePixelRatio(); 
     _self.onDrawCursor(e.offsetX, e.offsetY)
     if (!this.isDrag) {
       return
     }
-    _self.OnMouseMove(this.MoveStartX, e.clientX)
-    this.MoveStartX = e.clientX
+    _self.OnMouseMove(this.MoveStartX, e.clientX*pixelTatio)
+    this.MoveStartX = e.clientX*pixelTatio
   }
   this.OptCanvasElement.onmousedown = function (e) {
     this.isDrag = true
@@ -571,10 +575,10 @@ function QTChart (divElement) {
       this.IndicatorsDialog.appendChild(item)
       $("#" + item.id).click(function (e) {
         IndicatorsList[this.dataset.id].name != 'vol' ? IndicatorsList[this.dataset.id].datas = _self.CalculationIndicators(IndicatorsList[this.dataset.id].name) : IndicatorsList[this.dataset.id].datas = Basic.OrignDatas.kline
-        if (IndicatorsList[this.dataset.id].name == 'macd') {
-          console.log('指标数据：', IndicatorsList[this.dataset.id].datas)
-          saveJsonToFile(IndicatorsList[this.dataset.id].datas, 'macdDatas')
-        }
+        // if (IndicatorsList[this.dataset.id].name == 'macd') {
+        //   console.log('指标数据：', IndicatorsList[this.dataset.id].datas)
+        //   saveJsonToFile(IndicatorsList[this.dataset.id].datas, 'macdDatas')
+        // }
         _self.AddChart(IndicatorsList[this.dataset.id])
         _self.IndicatorsDialog.style.display = 'none'
       })
@@ -1251,10 +1255,17 @@ function MACDChart (canvas, option) {
     this.Canvas.closePath()
     // 绘制MACD
     this.Canvas.beginPath()
-    this.Canvas.strokeStyle = this.Option.style['MACD']
     this.Canvas.lineWidth = 2
     for (var i = 0, j = this.Datas.length; i < j; i++) {
-      this.DrawVerticalLine(i, 'MACD')
+      this.DrawVerticalLine(i, 'MACD','up')
+    }
+    this.Canvas.stroke()
+    this.Canvas.closePath()
+
+    this.Canvas.beginPath()
+    this.Canvas.lineWidth = 2
+    for (var i = 0, j = this.Datas.length; i < j; i++) {
+      this.DrawVerticalLine(i, 'MACD','down')
     }
     this.Canvas.stroke()
     this.Canvas.closePath()
@@ -1274,15 +1285,24 @@ function MACDChart (canvas, option) {
     this.Canvas.lineTo(this.StartX, this.StartY)
   }
 
-  this.DrawVerticalLine = function (i, attrName) {
+  this.DrawVerticalLine = function (i, attrName,type) {
     this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
-    if (parseFloat(this.Datas[i][attrName]) >= 0) {
-      this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
-    } else {
-      this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+    if(type=='up'){
+      if (parseFloat(this.Datas[i][attrName]) > 0) {
+        this.Canvas.strokeStyle = this.Option.style['MACD']['up']
+        this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
+        this.Canvas.moveTo(this.StartX, this.StartY)
+        this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+      }
+    }else{
+      if (parseFloat(this.Datas[i][attrName]) < 0) {
+        this.Canvas.strokeStyle = this.Option.style['MACD']['down']
+        this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+        this.Canvas.moveTo(this.StartX, this.StartY)
+        this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+      }
     }
-    this.Canvas.moveTo(this.StartX, this.StartY)
-    this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+
   }
 
 }
