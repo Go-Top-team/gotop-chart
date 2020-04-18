@@ -2,7 +2,10 @@ var Basic = {
   OrignDatas: {
 
   },
-  period: 30, // 1 5 15 30 60   显示分钟数，一天的话就是24小时*60 = 1440  
+  SignalDatas: {
+
+  },
+  period: 1, // 1 5 15 30 60   显示分钟数，一天的话就是24小时*60 = 1440  
   curMsgContainerHeight: 50,
   yAxisWidth: 50,
   xAxisHeight: 30,
@@ -135,7 +138,7 @@ function QTChart (divElement) {
     // 保存买卖点
     $('#save-signal-btn').click(
       function (e) {
-        saveJsonToFile(Basic.OrignDatas.kline, 'buySellSign')
+        saveJsonToFile(_self.ChartArray[0].signalDatas, 'buySellSign')
       }
     )
     // 切换周期
@@ -197,6 +200,7 @@ function QTChart (divElement) {
       bi1 && (chartArray[0].topLowDatas = bi1)
       centre1 && (chartArray[0].centreDatas = centre1)
       duan1 && (chartArray[0].xianDuanDatas = duan1)
+      signals1 && (chartArray[0].signalDatas = signals1)
       kLines1 && (chartArray[1].datas = kLines1)
     } else if (Basic.period == 5) {
       kLines5 && (chartArray[0].datas = kLines5)
@@ -437,11 +441,16 @@ function QTChart (divElement) {
     var y = e.y
     x *= Basic.pixelTatio
     y *= Basic.pixelTatio
-    if (Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal']) {
+    if (_self.ChartArray[0].signalDatas[Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']]) {
       _self.CreateDlbDialog(x, y, true)
     } else {
       _self.CreateDlbDialog(x, y, false)
     }
+    // if (Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal']) {
+    //   _self.CreateDlbDialog(x, y, true)
+    // } else {
+    //   _self.CreateDlbDialog(x, y, false)
+    // }
   }
   // 创建每个窗口的操作工具  关闭按钮、更换指标
   this.CreateFrameTool = function () {
@@ -521,27 +530,31 @@ function QTChart (divElement) {
     this.DLBDialog.appendChild(cancel)
     $('#' + item.id).click(function (e) {
       console.log('插入买点', _self.cur_kn)
-      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
-        price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
-        type: 'buy'
-      }
+      _self.ChartArray[0].signalDatas[Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']] = 'buy'
+      // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
+      //   price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
+      //   type: 'buy'
+      // }
+
       _self.DivElement.removeChild(_self.DLBDialog)
       _self.DLBDialog = null
       _self.SetUpdate()
     })
     $('#' + item1.id).click(function (e) {
       console.log('插入卖点')
-      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
-        price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
-        type: 'sell'
-      }
+      _self.ChartArray[0].signalDatas[Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']] = 'sell'
+      // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
+      //   price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
+      //   type: 'sell'
+      // }
       _self.DivElement.removeChild(_self.DLBDialog)
       _self.DLBDialog = null
       _self.SetUpdate()
     })
     $('#' + del.id).click(function (e) {
       console.log('删除')
-      Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = null
+      delete _self.ChartArray[0].signalDatas.Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']
+      // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = null
       _self.DivElement.removeChild(_self.DLBDialog)
       _self.DLBDialog = null
       _self.SetUpdate()
@@ -800,6 +813,7 @@ function KLinesChart (canvas, option) {
   this.TopLowDatas = option.topLowDatas
   this.XianDuanDatas = option.xianDuanDatas
   this.CentreDatas = option.centreDatas
+  this.SignalDatas = option.signalDatas
   this.YNumpx = 0
   this.StartX = 0
   this.StartY = 0
@@ -824,7 +838,8 @@ function KLinesChart (canvas, option) {
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
-      this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+      // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i])
       this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
       this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
       this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
@@ -892,19 +907,19 @@ function KLinesChart (canvas, option) {
 
   }
   // 绘制K线信号
-  this.DrawTradeSign = function (i, curMsg) {
+  this.DrawTradeSign = function (i, curSignMsg, curKDatas) {
     this.Canvas.beginPath()
     let centerX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + (Basic.kLineWidth / 2) + this.Option.cStartX
     let centerY = 0
     let r = Basic.signR
     let signType
-    if (curMsg.signal.type === 'buy') {
+    if (curSignMsg === 'buy') {
       signType = '买'
-      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curKDatas.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
       this.Canvas.fillStyle = Basic.buySignBg
     } else {
       signType = '卖'
-      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curMsg.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
+      centerY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (curKDatas.close - this.YAxisChart.MinDatas) * this.YNumpx + r + this.Option.cStartY + Basic.curMsgContainerHeight
       this.Canvas.fillStyle = Basic.sellSignBg
     }
     this.Canvas.arc(centerX, centerY, r, 0, 2 * Math.PI)
@@ -917,12 +932,12 @@ function KLinesChart (canvas, option) {
     this.Canvas.stroke()
     this.Canvas.closePath()
 
-    this.Canvas.beginPath()
-    this.Canvas.font = '14px san-serif'
-    this.Canvas.fillStyle = '#333'
-    this.Canvas.fillText(curMsg.signal.price, centerX - r, curMsg.signal.type === 'buy' ? centerY + r + 15 : centerY - r - 5)
-    this.Canvas.stroke()
-    this.Canvas.closePath()
+    // this.Canvas.beginPath()
+    // this.Canvas.font = '14px san-serif'
+    // this.Canvas.fillStyle = '#333'
+    // this.Canvas.fillText(curMsg.signal.price, centerX - r, curMsg.signal.type === 'buy' ? centerY + r + 15 : centerY - r - 5)
+    // this.Canvas.stroke()
+    // this.Canvas.closePath()
   }
   this.DrawBi = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
@@ -1070,7 +1085,8 @@ function KLinesChart (canvas, option) {
     this.drawTopLowPoint = {}
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
-      this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+      // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i])
       this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
       this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
       this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
