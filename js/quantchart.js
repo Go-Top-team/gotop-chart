@@ -29,8 +29,8 @@ var IndicatorsList = [{
     DIFF: '#fa5252',
     DEA: '#5f5fff',
     MACD: {
-      'up':'#26a69a',
-      'down':'#fa5252'
+      'up': '#26a69a',
+      'down': '#fa5252'
     }
   }
 },
@@ -89,10 +89,10 @@ function QTChart (divElement) {
         for (var i in datas) {
           let lastD = null
           let lastTimeStamp = null
-          const kD = new Date(datas[i].day)
+          const kD = new Date(datas[i].datetime)
           const scrollToDate = new Date(inputText)
           if (i > 0) {
-            lastD = new Date(datas[i - 1].day)
+            lastD = new Date(datas[i - 1].datetime)
             lastTimeStamp = lastD.getTime(lastD) / 1000
           }
           const kTimeStamp = kD.getTime(kD) / 1000
@@ -402,10 +402,10 @@ function QTChart (divElement) {
 
     if (dataStep > 0) {
       // 画布向右拖动，数据往左移动
-      pre != 0 && (pre-=Math.ceil(8/Basic.kLineWidth), cur-=Math.ceil(8/Basic.kLineWidth))
+      pre != 0 && (pre -= Math.ceil(8 / Basic.kLineWidth), cur -= Math.ceil(8 / Basic.kLineWidth))
     } else if (dataStep < 0) {
       // 画布向左拖动，数据往右移动
-      cur != Basic.OrignDatas.kline.length - 1 && (cur+=Math.ceil(8/Basic.kLineWidth), pre+=Math.ceil(8/Basic.kLineWidth))
+      cur != Basic.OrignDatas.kline.length - 1 && (cur += Math.ceil(8 / Basic.kLineWidth), pre += Math.ceil(8 / Basic.kLineWidth))
     }
     this.DataPreIndex = pre
     this.DataCurIndex = cur
@@ -414,13 +414,13 @@ function QTChart (divElement) {
   }
   // 事件监听
   this.OptCanvasElement.onmousemove = function (e) {
-    var pixelTatio = GetDevicePixelRatio(); 
+    var pixelTatio = GetDevicePixelRatio();
     _self.onDrawCursor(e.offsetX, e.offsetY)
     if (!this.isDrag) {
       return
     }
-    _self.OnMouseMove(this.MoveStartX, e.clientX*pixelTatio)
-    this.MoveStartX = e.clientX*pixelTatio
+    _self.OnMouseMove(this.MoveStartX, e.clientX * pixelTatio)
+    this.MoveStartX = e.clientX * pixelTatio
   }
   this.OptCanvasElement.onmousedown = function (e) {
     this.isDrag = true
@@ -685,13 +685,13 @@ function QTChart (divElement) {
     this.OptCanvas.font = '12px san-serif'
     Basic.curKIndex = kn - 1
     var curKMsg = this.ChartArray[0].datas[kn - 1]
-    var tw = this.OptCanvas.measureText(curKMsg.day).width
+    var tw = this.OptCanvas.measureText(curKMsg.datetime).width
 
     this.OptCanvas.fillStyle = '#333'
     this.OptCanvas.fillRect(x - tw / 2 - 10, Basic.height - Basic.xAxisHeight + 5, tw + 20, 15)
 
     this.OptCanvas.fillStyle = '#fff'
-    this.OptCanvas.fillText(curKMsg.day, x - tw / 2, Basic.height - Basic.xAxisHeight + 17)
+    this.OptCanvas.fillText(curKMsg.datetime, x - tw / 2, Basic.height - Basic.xAxisHeight + 17)
 
     var ytw = this.OptCanvas.measureText(yNum).width
     // 绘制Y轴的值标识
@@ -825,10 +825,10 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.TopLowDatas[this.Datas[i].day] && this.DrawBi(this.TopLowDatas[this.Datas[i].day], i, j)
-      this.XianDuanDatas[this.Datas[i].day] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].day], i, j)
-      this.CentreDatas[this.Datas[i].day] && this.DrawCentre(this.CentreDatas[this.Datas[i].day], i, j)
-      console.log(this.CentreDatas[this.Datas[i].day])
+      this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
+      this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
+      this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
+      console.log(this.CentreDatas[this.Datas[i].datetime])
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
@@ -839,7 +839,7 @@ function KLinesChart (canvas, option) {
   // 绘制当前信息
   this.DrawCurMsg = function (canvas, option) {
     let curMsg = option.curMsg
-    let text = option.goodsName + ':' + curMsg.day + " " + '开=' + curMsg.open + ',' + '收=' + curMsg.close + ',' + '高=' + curMsg.high + ',' + '低=' + curMsg.low + ',' + '量=' + curMsg.volume
+    let text = option.goodsName + ':' + curMsg.datetime + " " + '开=' + curMsg.open + ',' + '收=' + curMsg.close + ',' + '高=' + curMsg.high + ',' + '低=' + curMsg.low + ',' + '量=' + curMsg.volume
     canvas.setLineDash([0])
     canvas.strokeStyle = '#cdcdcd'
     canvas.fillStyle = '#f2faff'
@@ -1071,9 +1071,9 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.TopLowDatas[this.Datas[i].day] && this.DrawBi(this.TopLowDatas[this.Datas[i].day], i, j)
-      this.XianDuanDatas[this.Datas[i].day] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].day], i, j)
-      this.CentreDatas[this.Datas[i].day] && this.DrawCentre(this.CentreDatas[this.Datas[i].day], i, j)
+      this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
+      this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
+      this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
@@ -1257,7 +1257,7 @@ function MACDChart (canvas, option) {
     this.Canvas.beginPath()
     this.Canvas.lineWidth = 2
     for (var i = 0, j = this.Datas.length; i < j; i++) {
-      this.DrawVerticalLine(i, 'MACD','up')
+      this.DrawVerticalLine(i, 'MACD', 'up')
     }
     this.Canvas.stroke()
     this.Canvas.closePath()
@@ -1265,7 +1265,7 @@ function MACDChart (canvas, option) {
     this.Canvas.beginPath()
     this.Canvas.lineWidth = 2
     for (var i = 0, j = this.Datas.length; i < j; i++) {
-      this.DrawVerticalLine(i, 'MACD','down')
+      this.DrawVerticalLine(i, 'MACD', 'down')
     }
     this.Canvas.stroke()
     this.Canvas.closePath()
@@ -1285,16 +1285,16 @@ function MACDChart (canvas, option) {
     this.Canvas.lineTo(this.StartX, this.StartY)
   }
 
-  this.DrawVerticalLine = function (i, attrName,type) {
+  this.DrawVerticalLine = function (i, attrName, type) {
     this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
-    if(type=='up'){
+    if (type == 'up') {
       if (parseFloat(this.Datas[i][attrName]) > 0) {
         this.Canvas.strokeStyle = this.Option.style['MACD']['up']
         this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
         this.Canvas.moveTo(this.StartX, this.StartY)
         this.Canvas.lineTo(this.StartX, this.Option.zeroY)
       }
-    }else{
+    } else {
       if (parseFloat(this.Datas[i][attrName]) < 0) {
         this.Canvas.strokeStyle = this.Option.style['MACD']['down']
         this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
@@ -1742,7 +1742,7 @@ function XAxis (canvas, option) {
     var spaceTime = parseInt((this.EndX - Basic.canvasPaddingLeft) / (Basic.kLineWidth + Basic.kLineMarginRight) / 4)
     for (let i = 1, j = parseInt(this.Datas.length / spaceTime); i <= j; i++) {
       var item = {}
-      item.value = this.Datas[i * spaceTime - 1].day
+      item.value = this.Datas[i * spaceTime - 1].datetime
       item.xPosition = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i * spaceTime - Basic.kLineMarginRight - Basic.kLineWidth / 2
       this.XPoints.push(item)
     }
