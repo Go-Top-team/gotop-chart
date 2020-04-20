@@ -41,6 +41,8 @@ body{
 .indicators:hover{
   background: #ecf0fb;
 }
+.pre-signal-btn,
+.next-signal-btn,
 .save-signal-btn{
   width: 140px;
   text-align: center;
@@ -50,6 +52,8 @@ body{
   border-left: 2px solid #e0e3eb;
   font-size: 16px;
 }
+.pre-signal-btn:hover,
+.next-signal-btn:hover,
 .save-signal-btn:hover{
   background: #ecf0fb;
 }

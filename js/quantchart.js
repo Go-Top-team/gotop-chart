@@ -2,9 +2,8 @@ var Basic = {
   OrignDatas: {
 
   },
-  SignalDatas: {
-
-  },
+  SignalDatas: [],
+  SignalIndex: null,
   period: 1, // 1 5 15 30 60   显示分钟数，一天的话就是24小时*60 = 1440  
   curMsgContainerHeight: 50,
   yAxisWidth: 50,
@@ -86,43 +85,7 @@ function QTChart (divElement) {
     $("#go-date").click(
       function (e) {
         var inputText = $("#dateinput").val()
-        var datas = Basic.OrignDatas.kline
-        if (!datas) return
-        var scrollKIndex = 0
-        for (var i in datas) {
-          let lastD = null
-          let lastTimeStamp = null
-          const kD = new Date(datas[i].datetime)
-          const scrollToDate = new Date(inputText)
-          if (i > 0) {
-            lastD = new Date(datas[i - 1].datetime)
-            lastTimeStamp = lastD.getTime(lastD) / 1000
-          }
-          const kTimeStamp = kD.getTime(kD) / 1000
-          const sDTimeStamp = scrollToDate.getTime(scrollToDate) / 1000
-          if (kTimeStamp === sDTimeStamp) {
-            scrollKIndex = i
-            break
-          } else if (i !== 0 && lastTimeStamp === sDTimeStamp) {
-            scrollKIndex = i
-            break
-          } else if (kTimeStamp > sDTimeStamp && i !== 0 && sDTimeStamp > lastTimeStamp) {
-            scrollKIndex = i
-            break
-          }
-        }
-        scrollKIndex = parseInt(scrollKIndex)
-        if (scrollKIndex >= Basic.OrignDatas.kline.length - 1) {
-          _self.DataCurIndex = Basic.OrignDatas.kline.length - 1
-          _self.DataPreIndex = _self.DataCurIndex - Basic.ScreenKNum
-        } else if (scrollKIndex <= Basic.ScreenKNum - 1) {
-          _self.DataCurIndex = Basic.ScreenKNum - 1
-          _self.DataPreIndex = 0
-        } else {
-          _self.DataCurIndex = scrollKIndex
-          _self.DataPreIndex = scrollKIndex - Basic.ScreenKNum + 1
-        }
-        _self.SetUpdate()
+        scrollFun(inputText)
       }
     );
     $("#indicators-btn").click(
@@ -141,6 +104,28 @@ function QTChart (divElement) {
         saveJsonToFile(_self.ChartArray[0].signalDatas, 'buySellSign')
       }
     )
+    // 上一个买卖点
+    $('#pre-signal-btn').click(
+      function (e) {
+        if (Basic.SignalIndex == null) {
+          Basic.SignalIndex = Basic.SignalDatas.length - 1
+        } else {
+          Basic.SignalIndex != 0 ? Basic.SignalIndex-- : Basic.SignalIndex == 0
+        }
+        scrollFun(Basic.SignalDatas[Basic.SignalIndex].datetime)
+      }
+    )
+    // 下一个买卖点
+    $('#next-signal-btn').click(
+      function (e) {
+        if (Basic.SignalIndex == null) {
+          Basic.SignalIndex = Basic.SignalDatas.length - 1
+        } else {
+          Basic.SignalIndex != Basic.SignalDatas.length - 1 ? Basic.SignalIndex++ : Basic.SignalIndex == Basic.SignalDatas.length - 1
+        }
+        scrollFun(Basic.SignalDatas[Basic.SignalIndex].datetime)
+      }
+    )
     // 切换周期
     $('#period-select').change(function () {
       Basic.period = $('#period-select').val()
@@ -151,6 +136,46 @@ function QTChart (divElement) {
       _self.SetOption(option)
     })
     $('#period-select').val(Basic.period)
+    var scrollFun = function (inputText) {
+      console.log('scrollFun==')
+      var datas = Basic.OrignDatas.kline
+      if (!datas) return
+      var scrollKIndex = 0
+      for (var i in datas) {
+        let lastD = null
+        let lastTimeStamp = null
+        const kD = new Date(datas[i].datetime)
+        const scrollToDate = new Date(inputText)
+        if (i > 0) {
+          lastD = new Date(datas[i - 1].datetime)
+          lastTimeStamp = lastD.getTime(lastD) / 1000
+        }
+        const kTimeStamp = kD.getTime(kD) / 1000
+        const sDTimeStamp = scrollToDate.getTime(scrollToDate) / 1000
+        if (kTimeStamp === sDTimeStamp) {
+          scrollKIndex = i
+          break
+        } else if (i !== 0 && lastTimeStamp === sDTimeStamp) {
+          scrollKIndex = i
+          break
+        } else if (kTimeStamp > sDTimeStamp && i !== 0 && sDTimeStamp > lastTimeStamp) {
+          scrollKIndex = i
+          break
+        }
+      }
+      scrollKIndex = parseInt(scrollKIndex)
+      if (scrollKIndex >= Basic.OrignDatas.kline.length - 1) {
+        _self.DataCurIndex = Basic.OrignDatas.kline.length - 1
+        _self.DataPreIndex = _self.DataCurIndex - Basic.ScreenKNum
+      } else if (scrollKIndex <= Basic.ScreenKNum - 1) {
+        _self.DataCurIndex = Basic.ScreenKNum - 1
+        _self.DataPreIndex = 0
+      } else {
+        _self.DataCurIndex = scrollKIndex
+        _self.DataPreIndex = scrollKIndex - Basic.ScreenKNum + 1
+      }
+      _self.SetUpdate()
+    }
   }
   // 窗口初始化
   this.OnSize = function () {
@@ -247,6 +272,13 @@ function QTChart (divElement) {
     this.DataCurIndex = Basic.OrignDatas.kline.length - 1
     this.SplitDatas(this.DataPreIndex, this.DataCurIndex)
     this.Draw()
+    for (var i in this.ChartArray[0].signalDatas) {
+      const item = {
+        datetime: i,
+        type: this.ChartArray[0].signalDatas[i]
+      }
+      Basic.SignalDatas.push(item)
+    }
   }
   this.CalculationIndicators = function (indicatorName) {
     var datas
@@ -796,7 +828,9 @@ function TopToolContainer () {
       ' <option value="30">30min</option>\n' +
       ' </select>\n' +
       ' <div id="indicators-btn" class="indicators"><span class="iconfont icon-zhibiao"></span> 指 标</div>\n' +
-      ' <div id="save-signal-btn" class="save-signal-btn"><span class="iconfont icon-baocun"></span> 保存买卖点 </div>\n'
+      ' <div id="save-signal-btn" class="save-signal-btn"><span class="iconfont icon-baocun"></span> 保存买卖点 </div>\n' +
+      ' <div id="pre-signal-btn" class="pre-signal-btn"><span class="iconfont icon-previous"></span> 上一个买卖点</div>\n' +
+      ' <div id="next-signal-btn" class="next-signal-btn"><span class="iconfont icon-next"></span> 下一个买卖点</div>\n'
     return this.TopTool
   }
 }
@@ -831,6 +865,7 @@ function KLinesChart (canvas, option) {
 
   }
   this.toplow = null
+  this.signalDatetime = null
   // 创建K线图表
   this.Create = function () {
     this.YAxisChart = new YAxis(this.Canvas, this.Option)
@@ -839,11 +874,17 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i])
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
       this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
       this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
       this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
-      console.log(this.CentreDatas[this.Datas[i].datetime])
+    }
+    console.log('signalDatetime===', this.signalDatetime)
+    for (var b in Basic.SignalDatas) {
+      if (Basic.SignalDatas[b].datetime == this.signalDatetime) {
+        Basic.SignalIndex = b
+        break;
+      }
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
@@ -1086,10 +1127,16 @@ function KLinesChart (canvas, option) {
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i])
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
       this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
       this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
       this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
+    }
+    for (var b in Basic.SignalDatas) {
+      if (Basic.SignalDatas[b].datetime == this.signalDatetime) {
+        Basic.SignalIndex = b
+        break;
+      }
     }
     let range = {
       minData: this.YAxisChart.MinDatas,
