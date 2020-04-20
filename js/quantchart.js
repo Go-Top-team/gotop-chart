@@ -1275,7 +1275,7 @@ function MACDChart (canvas, option) {
   // 绘制当前信息
   this.DrawCurMsg = function (canvas, option) {
     let curMsg = option.curMsg
-    let text = 'MACD  ' + 'DIF:' + curMsg['DIFF'].toFixed(2) + ',DEA:' + curMsg['DEA'].toFixed(2) + ',MACD:' + curMsg['MACD'].toFixed(2)
+    let text = 'MACD  ' + 'DIF:' + curMsg['DIFF'].toFixed(4) + ',DEA:' + curMsg['DEA'].toFixed(4) + ',MACD:' + curMsg['MACD'].toFixed(4)
     canvas.setLineDash([0])
     canvas.strokeStyle = '#cdcdcd'
     canvas.fillStyle = '#f2faff'
@@ -1435,7 +1435,7 @@ function ASIChart (canvas, option) {
   // 绘制当前信息
   this.DrawCurMsg = function (canvas, option) {
     let curMsg = option.curMsg
-    let text = 'ASI  ' + 'ASI= ' + curMsg['ASI'].toFixed(2) + ',ASIT= ' + curMsg['ASIT'].toFixed(2)
+    let text = 'ASI  ' + 'ASI= ' + curMsg['ASI'].toFixed(4) + ',ASIT= ' + curMsg['ASIT'].toFixed(4)
     canvas.strokeStyle = '#cdcdcd'
     canvas.fillStyle = '#f2faff'
     canvas.strokeRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
@@ -1523,7 +1523,7 @@ function KDJChart (canvas, option) {
   // 绘制当前信息
   this.DrawCurMsg = function (canvas, option) {
     let curMsg = option.curMsg
-    let text = 'KDJ  ' + 'K= ' + curMsg['K'].toFixed(2) + ',D= ' + curMsg['D'].toFixed(2) + ',J= ' + curMsg['J'].toFixed(2)
+    let text = 'KDJ  ' + 'K= ' + curMsg['K'].toFixed(4) + ',D= ' + curMsg['D'].toFixed(4) + ',J= ' + curMsg['J'].toFixed(4)
     canvas.strokeStyle = '#cdcdcd'
     canvas.fillStyle = '#f2faff'
     canvas.strokeRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, Basic.curMsgContainerHeight / 2)
@@ -1623,7 +1623,7 @@ function RSIChart (canvas, option) {
   // 绘制当前信息
   this.DrawCurMsg = function (canvas, option) {
     let curMsg = option.curMsg
-    let text = 'RSI(6,12,24)  ' + 'RSI6= ' + curMsg['RSI6'].toFixed(2) + ',RSI12= ' + curMsg['RSI12'].toFixed(2) + ',RSI24= ' + curMsg['RSI24'].toFixed(2)
+    let text = 'RSI(6,12,24)  ' + 'RSI6= ' + curMsg['RSI6'].toFixed(4) + ',RSI12= ' + curMsg['RSI12'].toFixed(4) + ',RSI24= ' + curMsg['RSI24'].toFixed(4)
     canvas.setLineDash([0])
     canvas.strokeStyle = '#cdcdcd'
     canvas.fillStyle = '#f2faff'
