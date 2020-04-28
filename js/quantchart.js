@@ -413,7 +413,7 @@ function QTChart (divElement) {
           this.ChartArray[i].yRange = this.kLineChart.SetUpdateKLineChart(this.ChartArray[i])
           break;
         case 'vol':
-          this.ChartArray[i].yRange = this.volChart.SetUpdateVol(this.ChartArray[i])
+          // this.ChartArray[i].yRange = this.volChart.SetUpdateVol(this.ChartArray[i])
           break;
         case 'macd':
           this.ChartArray[i].yRange = this.macdChart.SetUpdateMACDChart(this.ChartArray[i])
@@ -864,6 +864,9 @@ function KLinesChart (canvas, option) {
   this.drawTopLowPoint = {
 
   }
+  this.topLowList = []
+  this.topLowObj = null
+  this.topLowEndDateTime = null
   this.toplow = null
   this.signalDatetime = null
   // 创建K线图表
@@ -871,13 +874,22 @@ function KLinesChart (canvas, option) {
     this.YAxisChart = new YAxis(this.Canvas, this.Option)
     this.YAxisChart.Create('low', 'high')
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
+
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
+      if (this.topLowObj && this.Datas[i].datetime == this.topLowObj['end_time']) {
+        this.topLowList.push(i)
+        this.DrawBi(this.topLowObj, i, j)
+      }
+      if (this.topLowList.length == 0 && this.TopLowDatas[this.Datas[i].datetime]) {
+        this.topLowList.push(i)
+        this.topLowObj = this.TopLowDatas[this.Datas[i].datetime]
+      }
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
-      this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
-      this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
-      this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
+      // this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
+      // this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
+      // this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
+      // this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
     }
     console.log('signalDatetime===', this.signalDatetime)
     for (var b in Basic.SignalDatas) {
@@ -980,27 +992,72 @@ function KLinesChart (canvas, option) {
     // this.Canvas.stroke()
     // this.Canvas.closePath()
   }
+  this.betweenDay = function (begin_time, end_time) {
+    return parseInt((end_time - begin_time) / (1000 * 60 * 60 * 24))
+  }
+  // 计算两个日期间的 K线 数量
+  this.calculateBetween = function (begin_time, end_time) {
+    var beginDate = new Date(begin_time)
+    var endDate = new Date(end_time)
+    beginDate_hours = parseInt(begin_time.split("T")[1].split(":")[0])
+    endDate_hours = parseInt(end_time.split("T")[1].split(":")[0])
+    t = (endDate.getTime() - beginDate.getTime()) / 1000 / Basic.period / 60
+    if (end_time.split("T")[0] != begin_time.split("T")[0]) {
+      // 非同一天
+      var between_day = this.betweenDay(end_time.split("T")[0], begin_time.split("T")[0])
+      if ((beginDate_hours <= 12 && endDate_hours <= 12) || (beginDate_hours >= 13 && endDate_hours >= 13)) {
+        // 早早 或 午午
+        t = t - 5400 / Basic.period / 60
+      } else if (beginDate_hours <= 12 && endDate_hours >= 13) {
+        // 早午
+        t = t - (5400 / Basic.period / 60) * 2
+      }
+      if (between_day > 1) {
+        // 间隔天数大于1，要计算上间隔天数的午休时间
+        t = t - ((66600 / Basic.period / 60) * between_day + (between_day - 1) * (5400 / Basic.period / 60))
+      } else {
+        // 间隔天数等于1
+        t = t - 66600 / Basic.period / 60
+      }
+    } else {
+      // 同一天
+      console.log(beginDate_hours, endDate_hours)
+      if (beginDate_hours <= 12 && endDate_hours >= 13) {
+        // 早午
+        t = t - (5400 / Basic.period / 60)
+      }
+    }
+    return t
+  }
   this.DrawBi = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'bottom') {
-      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
-      index2 = index + t
-      if (index2 > length) {
-        return
-      }
-      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      // t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
+      // if (obj.end_time.split("T")[0] != obj.begin_time.split("T")[0]) {
+      //   t = t - (66600 / Basic.period / 60) * this.difValue(obj.end_time.split("T")[0], obj.begin_time.split("T")[0])
+      // }
+      // t = this.calculateBetween(obj.begin_time, obj.end_time)
+      // index2 = index + t
+      // if (this.topLowList[1] > length) {
+      //   return
+      // }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.topLowList[0] + this.Option.cStartX + Basic.kLineWidth / 2
       tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
-      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.topLowList[1] + this.Option.cStartX + Basic.kLineWidth / 2
       lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     } else {
-      t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
-      index2 = index + t
-      if (index2 > length) {
-        return
-      }
-      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index + this.Option.cStartX + Basic.kLineWidth / 2
+      // t = (new Date(obj.end_time).getTime() - new Date(obj.begin_time).getTime()) / 1000 / Basic.period / 60
+      // if (obj.end_time.split("T")[0] != obj.begin_time.split("T")[0]) {
+      //   t = t - (66600 / Basic.period / 60) * this.difValue(obj.end_time.split("T")[0], obj.begin_time.split("T")[0])
+      // }
+      // t = this.calculateBetween(obj.begin_time, obj.end_time)
+      // index2 = index + t
+      // if (this.topLowList[1] > length) {
+      //   return
+      // }
+      tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.topLowList[0] + this.Option.cStartX + Basic.kLineWidth / 2
       tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.low - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
-      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * index2 + this.Option.cStartX + Basic.kLineWidth / 2
+      lstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * this.topLowList[1] + this.Option.cStartX + Basic.kLineWidth / 2
       lstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
     }
     this.Canvas.beginPath()
@@ -1010,6 +1067,8 @@ function KLinesChart (canvas, option) {
     this.Canvas.lineTo(ToFixedPoint(lstartX), ToFixedPoint(lstartY))
     this.Canvas.stroke()
     this.Canvas.closePath()
+    this.topLowObj = null
+    this.topLowList = []
   }
   this.DrawDuan = function (obj, index, length) {
     var tstartX, tstartY, lstartX, lstartY
@@ -1126,11 +1185,19 @@ function KLinesChart (canvas, option) {
     this.drawTopLowPoint = {}
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
+      if (this.topLowObj && this.Datas[i].datetime == this.topLowObj['end_time']) {
+        this.topLowList.push(i)
+        this.DrawBi(this.topLowObj, i, j)
+      }
+      if (this.topLowList.length == 0 && this.TopLowDatas[this.Datas[i].datetime]) {
+        this.topLowList.push(i)
+        this.topLowObj = this.TopLowDatas[this.Datas[i].datetime]
+      }
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
-      this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
-      this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
-      this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
+      // this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
+      // this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
+      // this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
+      // this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
     }
     for (var b in Basic.SignalDatas) {
       if (Basic.SignalDatas[b].datetime == this.signalDatetime) {
