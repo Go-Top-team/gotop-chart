@@ -90,7 +90,6 @@ function QTChart (divElement) {
     );
     $("#indicators-btn").click(
       function (e) {
-        console.log(e)
         if (_self.IndicatorsDialog) {
           _self.IndicatorsDialog.style.display = 'block'
         } else {
@@ -137,7 +136,6 @@ function QTChart (divElement) {
     })
     $('#period-select').val(Basic.period)
     var scrollFun = function (inputText) {
-      console.log('scrollFun==')
       var datas = Basic.OrignDatas.kline
       if (!datas) return
       var scrollKIndex = 0
@@ -232,6 +230,7 @@ function QTChart (divElement) {
       bi5 && (chartArray[0].topLowDatas = bi5)
       centre5 && (chartArray[0].centreDatas = centre5)
       duan5 && (chartArray[0].xianDuanDatas = duan5)
+      signals5 && (chartArray[0].signalDatas = signals5)
       kLines5 && (chartArray[1].datas = kLines5)
     } else if (Basic.period == 15) {
       kLines15 && (chartArray[0].datas = kLines15)
@@ -413,7 +412,7 @@ function QTChart (divElement) {
           this.ChartArray[i].yRange = this.kLineChart.SetUpdateKLineChart(this.ChartArray[i])
           break;
         case 'vol':
-          // this.ChartArray[i].yRange = this.volChart.SetUpdateVol(this.ChartArray[i])
+          this.ChartArray[i].yRange = this.volChart.SetUpdateVol(this.ChartArray[i])
           break;
         case 'macd':
           this.ChartArray[i].yRange = this.macdChart.SetUpdateMACDChart(this.ChartArray[i])
@@ -500,7 +499,6 @@ function QTChart (divElement) {
       this.DivElement.appendChild(frameTool)
       $("#" + frameTool.id).click(function () {
         var option = _self.ChartArray[this.dataset.id]
-        console.log('remove:', this.dataset.id)
         _self.RemoveChart(option, this.dataset.id)
       })
     }
@@ -561,7 +559,6 @@ function QTChart (divElement) {
     cancel.dataset.id = 'cancel'
     this.DLBDialog.appendChild(cancel)
     $('#' + item.id).click(function (e) {
-      console.log('插入买点', _self.cur_kn)
       _self.ChartArray[0].signalDatas[Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']] = 'buy'
       // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
       //   price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
@@ -573,7 +570,6 @@ function QTChart (divElement) {
       _self.SetUpdate()
     })
     $('#' + item1.id).click(function (e) {
-      console.log('插入卖点')
       _self.ChartArray[0].signalDatas[Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']] = 'sell'
       // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = {
       //   price: Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1].close,
@@ -584,7 +580,6 @@ function QTChart (divElement) {
       _self.SetUpdate()
     })
     $('#' + del.id).click(function (e) {
-      console.log('删除')
       delete _self.ChartArray[0].signalDatas.Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['datetime']
       // Basic.OrignDatas.kline[_self.DataPreIndex + _self.cur_kn - 1]['signal'] = null
       _self.DivElement.removeChild(_self.DLBDialog)
@@ -592,7 +587,6 @@ function QTChart (divElement) {
       _self.SetUpdate()
     })
     $('#' + cancel.id).click(function (e) {
-      console.log('取消')
       _self.DivElement.removeChild(_self.DLBDialog)
       _self.DLBDialog = null
       _self.SetUpdate()
@@ -645,7 +639,6 @@ function QTChart (divElement) {
           this.kLineChart = kLineChart
           this.ChartObjArray.push(this.kLineChart)
           this.xAxisChart.Create()
-          console.log('topLow:', this.ChartArray[i].topLowDatas, this.ChartArray[i].xianDuanDatas)
           this.ChartArray[i].yRange = this.kLineChart.Create()
           break;
         case 'vol':
@@ -662,7 +655,6 @@ function QTChart (divElement) {
           break;
         case 'rsi':
           var rsiChart = new RSIChart(this.Canvas, this.ChartArray[i])
-          console.log('rsi option:', this.ChartArray[i])
           this.rsiChart = rsiChart
           this.ChartObjArray.push(this.rsiChart)
           this.ChartArray[i].yRange = this.rsiChart.Create()
@@ -894,7 +886,7 @@ function KLinesChart (canvas, option) {
         lineObj = this.XianDuanDatas[this.Datas[i].datetime]
       }
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      // this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
       // this.TopLowDatas[this.Datas[i].datetime] && this.DrawBi(this.TopLowDatas[this.Datas[i].datetime], i, j)
       // this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
       // this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
@@ -1026,7 +1018,6 @@ function KLinesChart (canvas, option) {
   }
   this.DrawDuan = function (obj, list) {
     var tstartX, tstartY, lstartX, lstartY
-    console.log('====', obj.type)
     if (obj.type == 'down') {
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * list[0] + this.Option.cStartX + Basic.kLineWidth / 2
       tstartY = this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd - (obj.high - this.YAxisChart.MinDatas) * this.YNumpx + Basic.curMsgContainerHeight + this.Option.cStartY
@@ -1061,7 +1052,6 @@ function KLinesChart (canvas, option) {
     this.Canvas.strokeStyle = '#0093ff'
     this.Canvas.lineWidth = 2
     this.Canvas.strokeRect(startX, startY, endX - startX, endY - startY)
-    console.log(startX, startY, endX, endY)
     this.Canvas.closePath()
   }
   this.DrawTopLowLine = function () {
@@ -1080,27 +1070,11 @@ function KLinesChart (canvas, option) {
     this.Canvas.stroke()
     this.Canvas.closePath()
   }
-  this.setMaxValue = function (i, value) {
-    if (this.turnStatus == 'ding') {
-      if (value >= this.maxTop.value) {
-        this.maxTop.value = value
-        this.maxTop.index = i
-        this.drawTopLowPoint.top = this.maxTop
-      }
-    } else if (this.turnStatus == 'di') {
-      if (value <= this.maxLow.value) {
-        this.maxLow.value = value
-        this.maxLow.index = i
-        this.drawTopLowPoint.low = this.maxLow
-      }
-    }
-  }
   // 更新K线图表
   this.SetUpdateKLineChart = function (option) {
     this.Option = option
     this.Datas = option.datas
     this.TopLowDatas = option.topLowDatas
-    // this.Canvas.clearRect(option.cStartX, option.cStartY, option.cEndX - option.cStartX, option.cEndY - option.cStartY)
     this.YAxisChart.SetUpdateYAxis(this.Option)
     this.YNumpx = (this.Option.cHeight - Basic.curMsgContainerHeight - Basic.chartPd) / (this.YAxisChart.MaxDatas - this.YAxisChart.MinDatas)
     this.turnStatus = ""
@@ -1113,6 +1087,7 @@ function KLinesChart (canvas, option) {
     lineList = []
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
+      // 绘制笔
       if (topLowObj && this.Datas[i].datetime == topLowObj['end_time']) {
         topLowList.push(i)
         topLowObj, topLowList = this.DrawBi(topLowObj, topLowList)
@@ -1121,6 +1096,7 @@ function KLinesChart (canvas, option) {
         topLowList.push(i)
         topLowObj = this.TopLowDatas[this.Datas[i].datetime]
       }
+      // 绘制线段
       if (lineObj && this.Datas[i].datetime == lineObj['end_time']) {
         lineList.push(i)
         lineObj, lineList = this.DrawDuan(lineObj, lineList)
@@ -1130,9 +1106,8 @@ function KLinesChart (canvas, option) {
         lineObj = this.XianDuanDatas[this.Datas[i].datetime]
       }
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
-      // this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
-      // this.XianDuanDatas[this.Datas[i].datetime] && this.DrawDuan(this.XianDuanDatas[this.Datas[i].datetime], i, j)
-      // this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
+      this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
+      this.CentreDatas[this.Datas[i].datetime] && this.DrawCentre(this.CentreDatas[this.Datas[i].datetime], i, j)
     }
     for (var b in Basic.SignalDatas) {
       if (Basic.SignalDatas[b].datetime == this.signalDatetime) {
@@ -1177,6 +1152,9 @@ function VolChart (canvas, option) {
   }
 
   this.DrawVols = function (i, yNumpx, vol, open, close, startX, startY, endX, endY) {
+    if (this.YAxisChart.isBigNum) {
+      vol = vol / 1000
+    }
     this.Canvas.beginPath()
     if (open < close) {
       this.Canvas.fillStyle = Basic.volUpColor
