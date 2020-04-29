@@ -1300,7 +1300,10 @@ function MACDChart (canvas, option) {
     this.Canvas.beginPath()
     this.Canvas.lineWidth = 2
     for (var i = 0, j = this.Datas.length; i < j; i++) {
-      this.DrawVerticalLine(i, 'MACD', 'up')
+      // this.DrawVerticalLine(i, 'MACD', 'up')
+      if (this.Datas[i]['MACD'] > 0) {
+        this.DrawVerticalUpLine(i, 'MACD')
+      }
     }
     this.Canvas.stroke()
     this.Canvas.closePath()
@@ -1308,7 +1311,10 @@ function MACDChart (canvas, option) {
     this.Canvas.beginPath()
     this.Canvas.lineWidth = 2
     for (var i = 0, j = this.Datas.length; i < j; i++) {
-      this.DrawVerticalLine(i, 'MACD', 'down')
+      // this.DrawVerticalLine(i, 'MACD', 'down')
+      if (this.Datas[i]['MACD'] < 0) {
+        this.DrawVerticalDownLine(i, 'MACD')
+      }
     }
     this.Canvas.stroke()
     this.Canvas.closePath()
@@ -1328,26 +1334,59 @@ function MACDChart (canvas, option) {
     this.Canvas.lineTo(this.StartX, this.StartY)
   }
 
-  this.DrawVerticalLine = function (i, attrName, type) {
+  this.DrawVerticalDownLine = function (i, attrName) {
     this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
-    if (type == 'up') {
-      if (parseFloat(this.Datas[i][attrName]) > 0) {
-        this.Canvas.strokeStyle = this.Option.style['MACD']['up']
-        this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
-        this.Canvas.moveTo(this.StartX, this.StartY)
-        this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-      }
-    } else {
-      if (parseFloat(this.Datas[i][attrName]) < 0) {
-        this.Canvas.strokeStyle = this.Option.style['MACD']['down']
-        this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
-        this.Canvas.moveTo(this.StartX, this.StartY)
-        this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-      }
-    }
+    this.Canvas.strokeStyle = this.Option.style['MACD']['down']
+    this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+    this.Canvas.moveTo(this.StartX, this.StartY)
+    this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // if(this.Datas[i][attrName] > 0){
+    //   this.Canvas.strokeStyle = this.Option.style['MACD']['down']
+    //   this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+    //   this.Canvas.moveTo(this.StartX, this.StartY)
+    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // }else if(this.Datas[i][attrName] < 0){
+    //   this.Canvas.strokeStyle = this.Option.style['MACD']['up']
+    //   this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
+    //   this.Canvas.moveTo(this.StartX, this.StartY)
+    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // }
+
+    // if (type == 'up') {
+    //   if (parseFloat(this.Datas[i][attrName]) > 0) {
+    //     this.Canvas.strokeStyle = this.Option.style['MACD']['up']
+    //     this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
+    //     this.Canvas.moveTo(this.StartX, this.StartY)
+    //     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    //   }
+    // } else {
+    //   if (parseFloat(this.Datas[i][attrName]) < 0) {
+    //     this.Canvas.strokeStyle = this.Option.style['MACD']['down']
+    //     this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+    //     this.Canvas.moveTo(this.StartX, this.StartY)
+    //     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    //   }
+    // }
 
   }
-
+  this.DrawVerticalUpLine = function (i, attrName) {
+    this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
+    this.Canvas.strokeStyle = this.Option.style['MACD']['up']
+    this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
+    this.Canvas.moveTo(this.StartX, this.StartY)
+    this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // if(this.Datas[i][attrName] > 0){
+    //   this.Canvas.strokeStyle = this.Option.style['MACD']['down']
+    //   this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
+    //   this.Canvas.moveTo(this.StartX, this.StartY)
+    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // }else if(this.Datas[i][attrName] < 0){
+    //   this.Canvas.strokeStyle = this.Option.style['MACD']['up']
+    //   this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
+    //   this.Canvas.moveTo(this.StartX, this.StartY)
+    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
+    // }
+  }
 }
 
 function ASIChart (canvas, option) {
