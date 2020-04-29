@@ -891,11 +891,11 @@ function KLinesChart (canvas, option) {
         lineList.push(i)
         if (lineObj.type == 'up') {
           lineObj, lineList = this.DrawDuan(lineObj, lineList, upmacdValue)
-          downmacdValue = 0
         } else {
           lineObj, lineList = this.DrawDuan(lineObj, lineList, downmacdValue)
-          upmacdValue = 0
         }
+        downmacdValue = 0
+        upmacdValue = 0
       }
       if (lineList.length == 0 && this.XianDuanDatas[this.Datas[i].datetime]) {
         lineList.push(i)
