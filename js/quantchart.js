@@ -2,6 +2,7 @@ var Basic = {
   OrignDatas: {
 
   },
+  MACDDatas: null,
   SignalDatas: [],
   SignalIndex: null,
   period: 1, // 1 5 15 30 60   显示分钟数，一天的话就是24小时*60 = 1440  
@@ -416,6 +417,7 @@ function QTChart (divElement) {
           break;
         case 'macd':
           this.ChartArray[i].yRange = this.macdChart.SetUpdateMACDChart(this.ChartArray[i])
+          Basic.MACDDatas = this.ChartArray[i].datas
           break;
         case 'rsi':
           this.ChartArray[i].yRange = this.rsiChart.SetUpdateRSIChart(this.ChartArray[i])
@@ -649,6 +651,7 @@ function QTChart (divElement) {
           break;
         case 'macd':
           var macdChart = new MACDChart(this.Canvas, this.ChartArray[i])
+          Basic.MACDDatas = this.ChartArray[i].datas
           this.macdChart = macdChart
           this.ChartObjArray.push(this.macdChart)
           this.ChartArray[i].yRange = this.macdChart.Create()
@@ -867,8 +870,15 @@ function KLinesChart (canvas, option) {
     var topLowObj = null
     var lineObj = null
     var lineList = []
+    var upmacdValue = 0
+    var downmacdValue = 0
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
+      if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] > 0) {
+        upmacdValue += Basic.MACDDatas[i]['MACD']
+      } else if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] < 0) {
+        downmacdValue += Basic.MACDDatas[i]['MACD']
+      }
       if (topLowObj && this.Datas[i].datetime == topLowObj['end_time']) {
         topLowList.push(i)
         topLowObj, topLowList = this.DrawBi(topLowObj, topLowList)
@@ -879,11 +889,18 @@ function KLinesChart (canvas, option) {
       }
       if (lineObj && this.Datas[i].datetime == lineObj['end_time']) {
         lineList.push(i)
-        lineObj, lineList = this.DrawDuan(lineObj, lineList)
+        if (lineObj.type == 'up') {
+          lineObj, lineList = this.DrawDuan(lineObj, lineList, upmacdValue)
+          downmacdValue = 0
+        } else {
+          lineObj, lineList = this.DrawDuan(lineObj, lineList, downmacdValue)
+          upmacdValue = 0
+        }
       }
       if (lineList.length == 0 && this.XianDuanDatas[this.Datas[i].datetime]) {
         lineList.push(i)
         lineObj = this.XianDuanDatas[this.Datas[i].datetime]
+        macdValue = 0
       }
       // this.Datas[i].signal && this.Datas[i].signal.type != "" && this.DrawTradeSign(i, this.Datas[i])
       this.SignalDatas[this.Datas[i].datetime] && this.DrawTradeSign(i, this.SignalDatas[this.Datas[i].datetime], this.Datas[i]) && (this.signalDatetime = this.Datas[i].datetime)
@@ -1016,7 +1033,7 @@ function KLinesChart (canvas, option) {
     this.Canvas.closePath()
     return null, []
   }
-  this.DrawDuan = function (obj, list) {
+  this.DrawDuan = function (obj, list, macdValue) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'down') {
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * list[0] + this.Option.cStartX + Basic.kLineWidth / 2
@@ -1036,6 +1053,14 @@ function KLinesChart (canvas, option) {
     this.Canvas.lineTo(ToFixedPoint(lstartX), ToFixedPoint(lstartY))
     this.Canvas.stroke()
     this.Canvas.closePath()
+    if (Basic.MACDDatas) {
+      this.Canvas.beginPath()
+      this.Canvas.font = '14px san-serif'
+      this.Canvas.fillStyle = '#333'
+      this.Canvas.fillText(macdValue, lstartX, lstartY)
+      this.Canvas.stroke()
+      this.Canvas.closePath()
+    }
     return null, []
   }
   this.DrawCentre = function (obj, index, length) {
@@ -1081,12 +1106,19 @@ function KLinesChart (canvas, option) {
     this.maxLow = {}
     this.maxTop = {}
     this.drawTopLowPoint = {}
-    topLowObj = null
-    topLowList = []
-    lineObj = null
-    lineList = []
+    var topLowObj = null
+    var topLowList = []
+    var lineObj = null
+    var lineList = []
+    var upmacdValue = 0
+    var downmacdValue = 0
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
+      if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] > 0) {
+        upmacdValue += Basic.MACDDatas[i]['MACD']
+      } else if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] < 0) {
+        downmacdValue += Basic.MACDDatas[i]['MACD']
+      }
       // 绘制笔
       if (topLowObj && this.Datas[i].datetime == topLowObj['end_time']) {
         topLowList.push(i)
@@ -1099,7 +1131,13 @@ function KLinesChart (canvas, option) {
       // 绘制线段
       if (lineObj && this.Datas[i].datetime == lineObj['end_time']) {
         lineList.push(i)
-        lineObj, lineList = this.DrawDuan(lineObj, lineList)
+        if (lineObj.type == 'up') {
+          lineObj, lineList = this.DrawDuan(lineObj, lineList, upmacdValue)
+          downmacdValue = 0
+        } else {
+          lineObj, lineList = this.DrawDuan(lineObj, lineList, downmacdValue)
+          upmacdValue = 0
+        }
       }
       if (lineList.length == 0 && this.XianDuanDatas[this.Datas[i].datetime]) {
         lineList.push(i)
@@ -1340,34 +1378,6 @@ function MACDChart (canvas, option) {
     this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
     this.Canvas.moveTo(this.StartX, this.StartY)
     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // if(this.Datas[i][attrName] > 0){
-    //   this.Canvas.strokeStyle = this.Option.style['MACD']['down']
-    //   this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
-    //   this.Canvas.moveTo(this.StartX, this.StartY)
-    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // }else if(this.Datas[i][attrName] < 0){
-    //   this.Canvas.strokeStyle = this.Option.style['MACD']['up']
-    //   this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
-    //   this.Canvas.moveTo(this.StartX, this.StartY)
-    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // }
-
-    // if (type == 'up') {
-    //   if (parseFloat(this.Datas[i][attrName]) > 0) {
-    //     this.Canvas.strokeStyle = this.Option.style['MACD']['up']
-    //     this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
-    //     this.Canvas.moveTo(this.StartX, this.StartY)
-    //     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    //   }
-    // } else {
-    //   if (parseFloat(this.Datas[i][attrName]) < 0) {
-    //     this.Canvas.strokeStyle = this.Option.style['MACD']['down']
-    //     this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
-    //     this.Canvas.moveTo(this.StartX, this.StartY)
-    //     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    //   }
-    // }
-
   }
   this.DrawVerticalUpLine = function (i, attrName) {
     this.StartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * i + Basic.kLineWidth / 2 + this.Option.cStartX
@@ -1375,17 +1385,6 @@ function MACDChart (canvas, option) {
     this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
     this.Canvas.moveTo(this.StartX, this.StartY)
     this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // if(this.Datas[i][attrName] > 0){
-    //   this.Canvas.strokeStyle = this.Option.style['MACD']['down']
-    //   this.StartY = this.Option.zeroY + (Math.abs(parseFloat(this.Datas[i][attrName]) * this.YNumpx))
-    //   this.Canvas.moveTo(this.StartX, this.StartY)
-    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // }else if(this.Datas[i][attrName] < 0){
-    //   this.Canvas.strokeStyle = this.Option.style['MACD']['up']
-    //   this.Option.zeroY != null ? this.StartY = this.Option.zeroY - (parseFloat(this.Datas[i][attrName]) * this.YNumpx) : this.StartY = this.Option.cEndY - (parseFloat(this.Datas[i][attrName]) * yNumpx) - Basic.chartPd
-    //   this.Canvas.moveTo(this.StartX, this.StartY)
-    //   this.Canvas.lineTo(this.StartX, this.Option.zeroY)
-    // }
   }
 }
 
