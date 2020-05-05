@@ -409,6 +409,12 @@ function QTChart (divElement) {
       switch (this.ChartArray[i].name) {
         case 'kline':
           this.xAxisChart.SetUpdateXAxis(this.ChartArray[i])
+          for (var j in this.ChartArray) {
+            if (this.ChartArray[j].name == 'macd') {
+              Basic.MACDDatas = this.ChartArray[j].datas
+              break
+            }
+          }
           // this.ChartArray[i].topLowDatas = this.TopLow.Calculate(this.IndicatorDatas)
           this.ChartArray[i].yRange = this.kLineChart.SetUpdateKLineChart(this.ChartArray[i])
           break;
@@ -417,7 +423,7 @@ function QTChart (divElement) {
           break;
         case 'macd':
           this.ChartArray[i].yRange = this.macdChart.SetUpdateMACDChart(this.ChartArray[i])
-          Basic.MACDDatas = this.ChartArray[i].datas
+          // Basic.MACDDatas = this.ChartArray[i].datas
           break;
         case 'rsi':
           this.ChartArray[i].yRange = this.rsiChart.SetUpdateRSIChart(this.ChartArray[i])
@@ -635,6 +641,12 @@ function QTChart (divElement) {
         case 'kline':
           // this.TopLow = TopLow.Init()
           // this.ChartArray[i].topLowDatas = this.TopLow.Create(this.IndicatorDatas)
+          for (var j in this.ChartArray) {
+            if (this.ChartArray[j].name == 'macd') {
+              Basic.MACDDatas = this.ChartArray[j].datas
+              break;
+            }
+          }
           var xAxisChart = new XAxis(this.Canvas, this.ChartArray[i])
           var kLineChart = new KLinesChart(this.Canvas, this.ChartArray[i])
           this.xAxisChart = xAxisChart
@@ -651,7 +663,7 @@ function QTChart (divElement) {
           break;
         case 'macd':
           var macdChart = new MACDChart(this.Canvas, this.ChartArray[i])
-          Basic.MACDDatas = this.ChartArray[i].datas
+          // Basic.MACDDatas = this.ChartArray[i].datas
           this.macdChart = macdChart
           this.ChartObjArray.push(this.macdChart)
           this.ChartArray[i].yRange = this.macdChart.Create()
