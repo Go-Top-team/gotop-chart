@@ -1091,7 +1091,7 @@ function KLinesChart (canvas, option) {
       this.Canvas.font = '14px san-serif'
       this.Canvas.fillStyle = '#333'
       if (macdValue < 0) {
-        this.Canvas.fillText(macdValue.toFixed(4), lstartX, lstartY + 20)
+        this.Canvas.fillText(macdValue.toFixed(4), lstartX, lstartY - 20)
       } else {
         this.Canvas.fillText(macdValue.toFixed(4), lstartX, lstartY - 20)
       }
