@@ -884,21 +884,33 @@ function KLinesChart (canvas, option) {
     var lineList = []
     var upmacdValue = 0
     var downmacdValue = 0
+    var lupmacdValue = 0
+    var ldownmacdValue = 0
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] > 0) {
         upmacdValue += Basic.MACDDatas[i]['MACD']
+        lupmacdValue += Basic.MACDDatas[i]['MACD']
       } else if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] < 0) {
         downmacdValue += Basic.MACDDatas[i]['MACD']
+        ldownmacdValue += Basic.MACDDatas[i]['MACD']
       }
+
       if (topLowObj && this.Datas[i].datetime == topLowObj['end_time']) {
         topLowList.push(i)
-        topLowObj, topLowList = this.DrawBi(topLowObj, topLowList)
+        if (topLowObj.type == 'top') {
+          topLowObj, topLowList = this.DrawBi(topLowObj, topLowList, lupmacdValue)
+        } else {
+          topLowObj, topLowList = this.DrawBi(topLowObj, topLowList, ldownmacdValue)
+        }
+        ldownmacdValue = 0
+        lupmacdValue = 0
       }
       if (topLowList.length == 0 && this.TopLowDatas[this.Datas[i].datetime]) {
         topLowList.push(i)
         topLowObj = this.TopLowDatas[this.Datas[i].datetime]
       }
+
       if (lineObj && this.Datas[i].datetime == lineObj['end_time']) {
         lineList.push(i)
         if (lineObj.type == 'up') {
@@ -1023,7 +1035,7 @@ function KLinesChart (canvas, option) {
   this.betweenDay = function (begin_time, end_time) {
     return parseInt((end_time - begin_time) / (1000 * 60 * 60 * 24))
   }
-  this.DrawBi = function (obj, list) {
+  this.DrawBi = function (obj, list, macdvalue) {
     var tstartX, tstartY, lstartX, lstartY
     if (obj.type == 'bottom') {
       tstartX = Basic.canvasPaddingLeft + (Basic.kLineWidth + Basic.kLineMarginRight) * list[0] + this.Option.cStartX + Basic.kLineWidth / 2
@@ -1043,6 +1055,15 @@ function KLinesChart (canvas, option) {
     this.Canvas.lineTo(ToFixedPoint(lstartX), ToFixedPoint(lstartY))
     this.Canvas.stroke()
     this.Canvas.closePath()
+    console.log('macd:', macdvalue)
+    if (Basic.MACDDatas) {
+      this.Canvas.beginPath()
+      this.Canvas.font = '14px san-serif'
+      this.Canvas.fillStyle = '#ff0000'
+      this.Canvas.fillText(macdvalue.toFixed(4), lstartX, lstartY)
+      this.Canvas.stroke()
+      this.Canvas.closePath()
+    }
     return null, []
   }
   this.DrawDuan = function (obj, list, macdValue) {
@@ -1069,7 +1090,12 @@ function KLinesChart (canvas, option) {
       this.Canvas.beginPath()
       this.Canvas.font = '14px san-serif'
       this.Canvas.fillStyle = '#333'
-      this.Canvas.fillText(macdValue, lstartX, lstartY)
+      if (macdValue < 0) {
+        this.Canvas.fillText(macdValue.toFixed(4), lstartX, lstartY + 20)
+      } else {
+        this.Canvas.fillText(macdValue.toFixed(4), lstartX, lstartY - 20)
+      }
+
       this.Canvas.stroke()
       this.Canvas.closePath()
     }
@@ -1124,18 +1150,29 @@ function KLinesChart (canvas, option) {
     var lineList = []
     var upmacdValue = 0
     var downmacdValue = 0
+    var lupmacdValue = 0
+    var ldownmacdValue = 0
     for (var i = 0, j = this.Datas.length; i < j; i++) {
       this.DrawKLines(i, parseFloat(this.Datas[i].open), parseFloat(this.Datas[i].close), parseFloat(this.Datas[i].high), parseFloat(this.Datas[i].low))
       if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] > 0) {
         upmacdValue += Basic.MACDDatas[i]['MACD']
+        lupmacdValue += Basic.MACDDatas[i]['MACD']
       } else if (Basic.MACDDatas && Basic.MACDDatas[i]['MACD'] < 0) {
         downmacdValue += Basic.MACDDatas[i]['MACD']
+        ldownmacdValue += Basic.MACDDatas[i]['MACD']
       }
       // 绘制笔
       if (topLowObj && this.Datas[i].datetime == topLowObj['end_time']) {
         topLowList.push(i)
-        topLowObj, topLowList = this.DrawBi(topLowObj, topLowList)
+        if (topLowObj.type == 'top') {
+          topLowObj, topLowList = this.DrawBi(topLowObj, topLowList, lupmacdValue)
+        } else {
+          topLowObj, topLowList = this.DrawBi(topLowObj, topLowList, ldownmacdValue)
+        }
+        ldownmacdValue = 0
+        lupmacdValue = 0
       }
+
       if (topLowList.length == 0 && this.TopLowDatas[this.Datas[i].datetime]) {
         topLowList.push(i)
         topLowObj = this.TopLowDatas[this.Datas[i].datetime]
